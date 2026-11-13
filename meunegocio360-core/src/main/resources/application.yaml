@@ -1,3 +1,49 @@
 spring:
   application:
     name: meunegocio360-core
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  # Jackson
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Application auth configuration
+app:
+  auth:
+    max-tentativas: 5
+    bloqueio-minutos: 15
+    jwt:
+      expiracao-minutos: 15
+      emissor: meunegocio360-core
+    refresh:
+      expiracao-dias: 7
+      limpeza-dias: 30
+    cookie:
+      nome: mn360_refresh
+      secure: true
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      show-components: never

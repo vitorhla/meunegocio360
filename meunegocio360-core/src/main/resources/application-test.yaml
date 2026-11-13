@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/meunegocio360_core?serverTimezone=UTC
+    username: test
+    password: test
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  auth:
+    jwt:
+      secret: dGVzdC1qd3Qtc2VjcmV0LXdoaWNoLWlzLWF0LWxlYXN0LTMtYnl0ZXMtbG9uZw==
+    cookie:
+      secure: false
+
+logging:
+  level:
+    br.com.meunegocio360: DEBUG
