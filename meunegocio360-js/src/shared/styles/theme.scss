@@ -1,0 +1,108 @@
+// ============================================================
+// MeuNegócio360 — Tema Bootstrap 5
+// §2 do requisitos-fe.md
+// ============================================================
+
+// 1. Tipografia (antes do bootstrap para que as variáveis
+//    sejam usadas durante a compilação do Bootstrap)
+// ------------------------------------------------------------
+@import '@fontsource/barlow/400.css';
+@import '@fontsource/barlow/500.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow-condensed/500.css';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+
+// 2. Paleta de cores — substitui as variáveis padrão do Bootstrap
+// ------------------------------------------------------------
+$primary: #ec4e26;
+$body-bg: #fcf5f0;
+$card-bg: #fcf5f0;
+$border-color: #4a3f39;
+$table-border-color: #4a3f39;
+$card-border-color: #4a3f39;
+$body-secondary-color: #4a3f39;
+$body-color: #1f1612;
+
+// Cores de feedback com contraste AA sobre o fundo Creme
+$danger: #b02a37;
+$success: #146c43;
+
+// Contraste (WCAG 2.2 AA)
+$color-contrast-dark: #1f1612;
+$min-contrast-ratio: 4.5;
+
+// Links (sublinhados e em preto para contraste AA)
+$link-color: #1f1612;
+$link-decoration: underline;
+$link-hover-color: #4a3f39;
+$link-shade-percentage: 10%;
+
+// Foco
+$focus-ring-color: rgba(#ec4e26, 0.5);
+$focus-ring-width: 0.2rem;
+$focus-ring-blur: 0;
+$focus-ring-box-shadow: 0 0 0 $focus-ring-width $focus-ring-color;
+
+// 3. Tipografia no Bootstrap
+// ------------------------------------------------------------
+$headings-font-family: 'Barlow Condensed', sans-serif;
+$headings-font-weight: 600;
+$font-family-sans-serif:
+  'Barlow',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  Roboto,
+  'Helvetica Neue',
+  Arial,
+  sans-serif;
+$font-weight-base: 400;
+$font-size-base: 1rem;
+
+// 4. Importa o Bootstrap (via Sass) ANTES de estender, para ter
+//    as variáveis disponíveis
+// ------------------------------------------------------------
+@import 'bootstrap/scss/bootstrap';
+
+// 5. Tema estendido (após o Bootstrap)
+// ------------------------------------------------------------
+$theme-colors: map-merge(
+  $theme-colors,
+  (
+    'footer': #cdbbae,
+  )
+);
+
+// 6. Ajustes pós-Bootstrap
+// ------------------------------------------------------------
+
+// Garantir que btn-primary tenha texto preto (contraste 4,8:1)
+.btn-primary {
+  --bs-btn-color: #{$color-contrast-dark};
+  --bs-btn-hover-color: #{$color-contrast-dark};
+  --bs-btn-active-color: #{$color-contrast-dark};
+  --bs-btn-disabled-color: #{$color-contrast-dark};
+}
+
+// bg-footer
+.bg-footer {
+  background-color: #cdbbae;
+}
+
+// Anel de foco visível
+*:focus-visible {
+  outline: none;
+  box-shadow: $focus-ring-box-shadow;
+}
+
+// Transições respeitando prefers-reduced-motion
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
