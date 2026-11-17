@@ -9,6 +9,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -19,16 +20,20 @@ public class DevSeedConfig implements ApplicationRunner {
 
   private final UsuarioRepository usuarioRepository;
   private final PasswordEncoder passwordEncoder;
+  private final Environment environment;
 
-  public DevSeedConfig(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+  public DevSeedConfig(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+      Environment environment) {
     this.usuarioRepository = usuarioRepository;
     this.passwordEncoder = passwordEncoder;
+    this.environment = environment;
   }
 
   @Override
   public void run(ApplicationArguments args) {
-    String adminSenha = System.getenv("SEED_ADMIN_SENHA");
-    String usuarioSenha = System.getenv("SEED_USUARIO_SENHA");
+    // Lê do Environment do Spring (importa o ../.env via spring.config.import)
+    String adminSenha = environment.getProperty("SEED_ADMIN_SENHA");
+    String usuarioSenha = environment.getProperty("SEED_USUARIO_SENHA");
 
     if (adminSenha == null || adminSenha.isBlank()) {
       log.warn("SEED_ADMIN_SENHA não configurada. Seed não será executado.");
