@@ -49,16 +49,43 @@ public class RefreshToken {
     this.criadoEm = Instant.now();
   }
 
-  public void revogar() { this.revogadoEm = Instant.now(); }
+  public void revogar() {
+    this.revogadoEm = Instant.now();
+  }
 
-  public boolean isExpirado(Instant agora) { return agora.isAfter(expiraEm); }
-  public boolean isRevogado() { return revogadoEm != null; }
+  public boolean isExpirado(Instant agora) {
+    return agora.isAfter(expiraEm);
+  }
 
-  public UUID getId() { return id; }
-  public UUID getUsuarioId() { return usuarioId; }
-  public UUID getFamiliaId() { return familiaId; }
-  public String getTokenHash() { return tokenHash; }
-  public Instant getExpiraEm() { return expiraEm; }
-  public Instant getRevogadoEm() { return revogadoEm; }
-  public Instant getCriadoEm() { return criadoEm; }
+  public boolean isRevogado() {
+    return revogadoEm != null;
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public UUID getUsuarioId() {
+    return usuarioId;
+  }
+
+  public UUID getFamiliaId() {
+    return familiaId;
+  }
+
+  public String getTokenHash() {
+    return tokenHash;
+  }
+
+  public Instant getExpiraEm() {
+    return expiraEm;
+  }
+
+  public Instant getRevogadoEm() {
+    return revogadoEm;
+  }
+
+  public Instant getCriadoEm() {
+    return criadoEm;
+  }
 }

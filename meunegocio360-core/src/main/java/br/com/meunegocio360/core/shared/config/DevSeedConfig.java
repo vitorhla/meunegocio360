@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Seed de desenvolvimento (RF-BE-002, RN-08): cria um usuário por perfil (ADMIN, OPERADOR_COMERCIAL
+ * e OPERADOR_FINANCEIRO) com senhas lidas do ambiente. NÃO cria empresa, para que o fluxo de
+ * primeiro cadastro possa ser verificado (RN-08).
+ */
 @Configuration
 @Profile("dev")
 public class DevSeedConfig implements ApplicationRunner {
@@ -22,7 +27,9 @@ public class DevSeedConfig implements ApplicationRunner {
   private final PasswordEncoder passwordEncoder;
   private final Environment environment;
 
-  public DevSeedConfig(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+  public DevSeedConfig(
+      UsuarioRepository usuarioRepository,
+      PasswordEncoder passwordEncoder,
       Environment environment) {
     this.usuarioRepository = usuarioRepository;
     this.passwordEncoder = passwordEncoder;
@@ -32,30 +39,31 @@ public class DevSeedConfig implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) {
     // Lê do Environment do Spring (importa o ../.env via spring.config.import)
-    String adminSenha = environment.getProperty("SEED_ADMIN_SENHA");
-    String usuarioSenha = environment.getProperty("SEED_USUARIO_SENHA");
+    criarUsuarioSeNaoExistir(
+        "admin@meunegocio360.com", "Administrador", "SEED_ADMIN_SENHA", Perfil.ADMIN);
+    criarUsuarioSeNaoExistir(
+        "usuario@meunegocio360.com",
+        "Operador Comercial",
+        "SEED_USUARIO_SENHA",
+        Perfil.OPERADOR_COMERCIAL);
+    criarUsuarioSeNaoExistir(
+        "financeiro@meunegocio360.com",
+        "Operador Financeiro",
+        "SEED_FINANCEIRO_SENHA",
+        Perfil.OPERADOR_FINANCEIRO);
+  }
 
-    if (adminSenha == null || adminSenha.isBlank()) {
-      log.warn("SEED_ADMIN_SENHA não configurada. Seed não será executado.");
+  private void criarUsuarioSeNaoExistir(
+      String email, String nome, String nomeVariavelSenha, Perfil perfil) {
+    String senha = environment.getProperty(nomeVariavelSenha);
+    if (senha == null || senha.isBlank()) {
+      log.warn(
+          "{} não configurada. Usuário {} ({}) não será criado.", nomeVariavelSenha, nome, email);
       return;
     }
-    if (usuarioSenha == null || usuarioSenha.isBlank()) {
-      log.warn("SEED_USUARIO_SENHA não configurada. Seed não será executado.");
-      return;
-    }
-
-    if (usuarioRepository.findByEmailIgnoreCase("admin@meunegocio360.com.br").isEmpty()) {
-      Usuario admin = new Usuario("Administrador", "admin@meunegocio360.com.br",
-          passwordEncoder.encode(adminSenha), Perfil.ADMIN);
-      usuarioRepository.save(admin);
-      log.info("Usuário ADMIN criado: admin@meunegocio360.com.br");
-    }
-
-    if (usuarioRepository.findByEmailIgnoreCase("usuario@meunegocio360.com.br").isEmpty()) {
-      Usuario usuario = new Usuario("Usuário", "usuario@meunegocio360.com.br",
-          passwordEncoder.encode(usuarioSenha), Perfil.USUARIO);
-      usuarioRepository.save(usuario);
-      log.info("Usuário USUARIO criado: usuario@meunegocio360.com.br");
+    if (usuarioRepository.findByEmailIgnoreCase(email).isEmpty()) {
+      usuarioRepository.save(new Usuario(nome, email, passwordEncoder.encode(senha), perfil));
+      log.info("Usuário {} criado: {}", perfil, email);
     }
   }
 }

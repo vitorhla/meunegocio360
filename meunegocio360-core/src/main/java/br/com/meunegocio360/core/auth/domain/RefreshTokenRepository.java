@@ -7,8 +7,12 @@ import java.util.UUID;
 
 public interface RefreshTokenRepository {
   Optional<RefreshToken> findByTokenHash(String tokenHash);
+
   List<RefreshToken> findByFamiliaId(UUID familiaId);
+
   RefreshToken save(RefreshToken refreshToken);
+
   void deleteAllByExpiraEmBefore(Instant dataLimite);
+
   void deleteAllByUsuarioId(UUID usuarioId);
 }

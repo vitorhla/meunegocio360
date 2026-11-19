@@ -21,6 +21,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -37,8 +39,11 @@ public class SecurityConfig {
   public SecurityConfig(
       @Value("${CORS_ALLOWED_ORIGINS:http://localhost:5173}") String allowedOrigins,
       @Value("${JWT_SECRET}") String jwtSecret) {
-    this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
-        .map(String::trim).filter(s -> !s.isEmpty()).toList();
+    this.allowedOrigins =
+        Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
     this.jwtSecret = jwtSecret;
   }
 
@@ -49,31 +54,38 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .cors(c -> c.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests(auth ->
-            auth.requestMatchers(
-                    "/api/v1/auth/login",
-                    "/api/v1/auth/refresh",
-                    "/api/v1/auth/logout",
-                    "/actuator/health",
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs",
-                    "/v3/api-docs/**")
-                .permitAll()
-                .anyRequest().authenticated())
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers(
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/refresh",
+                        "/api/v1/auth/logout",
+                        "/actuator/health",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
-        .exceptionHandling(ex -> {
-          ex.authenticationEntryPoint((request, response, authException) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/problem+json");
-            response.getWriter().write(exceptionHandler.buildUnauthorized(request, authException));
-          });
-          ex.accessDeniedHandler((request, response, accessDeniedException) -> {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            response.setContentType("application/problem+json");
-            response.getWriter().write(exceptionHandler.buildForbiddenOrigin(request));
-          });
-        });
+        .exceptionHandling(
+            ex -> {
+              ex.authenticationEntryPoint(
+                  (request, response, authException) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/problem+json");
+                    response
+                        .getWriter()
+                        .write(exceptionHandler.buildUnauthorized(request, authException));
+                  });
+              ex.accessDeniedHandler(
+                  (request, response, accessDeniedException) -> {
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/problem+json");
+                    response.getWriter().write(exceptionHandler.buildForbidden(request));
+                  });
+            });
 
     return http.build();
   }
@@ -95,6 +107,21 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+  }
+
+  /**
+   * Converte a claim {@code perfil} do JWT em authorities (sem prefixo), permitindo
+   * {@code @PreAuthorize("hasAuthority('ADMIN')")} e similares (RNF-BE-47, RF-BE-002).
+   */
+  @Bean
+  public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter =
+        new JwtGrantedAuthoritiesConverter();
+    grantedAuthoritiesConverter.setAuthoritiesClaimName("perfil");
+    grantedAuthoritiesConverter.setAuthorityPrefix("");
+    JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+    converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+    return converter;
   }
 
   @Bean

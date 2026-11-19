@@ -4,6 +4,8 @@ import br.com.meunegocio360.core.auth.application.AuthService.AccountLockedExcep
 import br.com.meunegocio360.core.auth.application.AuthService.InvalidCredentialsException;
 import br.com.meunegocio360.core.auth.application.AuthService.InvalidRefreshTokenException;
 import br.com.meunegocio360.core.auth.application.AuthService.OriginNotAllowedException;
+import br.com.meunegocio360.core.empresa.application.EmpresaAtiva;
+import br.com.meunegocio360.core.empresa.application.EmpresaService;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,14 +14,16 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,12 +43,14 @@ public class GlobalExceptionHandler {
             .map(fe -> new FieldErrorBean(fe.getField(), fe.getDefaultMessage()))
             .toList();
 
-    ProblemDetail problem = createProblem(
-        HttpStatus.BAD_REQUEST,
-        "https://meunegocio360.com.br/problemas/validacao",
-        "Dados inválidos",
-        "Um ou mais campos são inválidos.",
-        request, "VALIDATION_ERROR");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.BAD_REQUEST,
+            "https://meunegocio360.com.br/problemas/validacao",
+            "Dados inválidos",
+            "Um ou mais campos são inválidos.",
+            request,
+            "VALIDATION_ERROR");
     problem.setProperty("errors", errors);
     return ResponseEntity.badRequest().body(problem);
   }
@@ -52,39 +58,50 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ProblemDetail> handleMalformedJson(
       HttpMessageNotReadableException ex, WebRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.BAD_REQUEST,
-        "https://meunegocio360.com.br/problemas/validacao",
-        "Dados inválidos",
-        "JSON malformado ou tipo incompatível.",
-        request, "VALIDATION_ERROR");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.BAD_REQUEST,
+            "https://meunegocio360.com.br/problemas/validacao",
+            "Dados inválidos",
+            "JSON malformado ou tipo incompatível.",
+            request,
+            "VALIDATION_ERROR");
     return ResponseEntity.badRequest().body(problem);
   }
 
   @ExceptionHandler(InvalidCredentialsException.class)
   public ResponseEntity<ProblemDetail> handleInvalidCredentials(
       InvalidCredentialsException ex, WebRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.UNAUTHORIZED,
-        "https://meunegocio360.com.br/problemas/credenciais-invalidas",
-        "Credenciais inválidas",
-        "E-mail ou senha inválidos.",
-        request, "INVALID_CREDENTIALS");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNAUTHORIZED,
+            "https://meunegocio360.com.br/problemas/credenciais-invalidas",
+            "Credenciais inválidas",
+            "E-mail ou senha inválidos.",
+            request,
+            "INVALID_CREDENTIALS");
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
   }
 
   @ExceptionHandler(InvalidRefreshTokenException.class)
   public ResponseEntity<ProblemDetail> handleInvalidRefreshToken(
       InvalidRefreshTokenException ex, WebRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.UNAUTHORIZED,
-        "https://meunegocio360.com.br/problemas/refresh-token-invalido",
-        "Refresh token inválido",
-        "Refresh token inválido, expirado ou revogado.",
-        request, "INVALID_REFRESH_TOKEN");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNAUTHORIZED,
+            "https://meunegocio360.com.br/problemas/refresh-token-invalido",
+            "Refresh token inválido",
+            "Refresh token inválido, expirado ou revogado.",
+            request,
+            "INVALID_REFRESH_TOKEN");
 
-    String expiredCookie = org.springframework.http.ResponseCookie.from(COOKIE_NAME, "")
-        .httpOnly(true).path("/api/v1/auth").maxAge(0).build().toString();
+    String expiredCookie =
+        org.springframework.http.ResponseCookie.from(COOKIE_NAME, "")
+            .httpOnly(true)
+            .path("/api/v1/auth")
+            .maxAge(0)
+            .build()
+            .toString();
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .header(HttpHeaders.SET_COOKIE, expiredCookie)
         .body(problem);
@@ -93,12 +110,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ProblemDetail> handleBadCredentials(
       BadCredentialsException ex, WebRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.UNAUTHORIZED,
-        "https://meunegocio360.com.br/problemas/nao-autorizado",
-        "Não autenticado",
-        "Token de acesso ausente, inválido ou expirado.",
-        request, "UNAUTHORIZED");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNAUTHORIZED,
+            "https://meunegocio360.com.br/problemas/nao-autorizado",
+            "Não autenticado",
+            "Token de acesso ausente, inválido ou expirado.",
+            request,
+            "UNAUTHORIZED");
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
         .body(problem);
@@ -107,72 +126,212 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(OriginNotAllowedException.class)
   public ResponseEntity<ProblemDetail> handleOriginNotAllowed(
       OriginNotAllowedException ex, WebRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.FORBIDDEN,
-        "https://meunegocio360.com.br/problemas/origem-nao-permitida",
-        "Origem não permitida",
-        "Origem não permitida.",
-        request, "ORIGIN_NOT_ALLOWED");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.FORBIDDEN,
+            "https://meunegocio360.com.br/problemas/origem-nao-permitida",
+            "Origem não permitida",
+            "Origem não permitida.",
+            request,
+            "ORIGIN_NOT_ALLOWED");
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
   }
 
   @ExceptionHandler(AccountLockedException.class)
   public ResponseEntity<ProblemDetail> handleAccountLocked(
       AccountLockedException ex, WebRequest request) {
-    long retryAfter = Math.max(0,
-        Duration.between(Instant.now(), ex.getBloqueadoAte()).getSeconds());
+    long retryAfter =
+        Math.max(0, Duration.between(Instant.now(), ex.getBloqueadoAte()).getSeconds());
 
-    ProblemDetail problem = createProblem(
-        HttpStatus.TOO_MANY_REQUESTS,
-        "https://meunegocio360.com.br/problemas/conta-bloqueada",
-        "Conta temporariamente bloqueada",
-        "Conta temporariamente bloqueada por tentativas excessivas.",
-        request, "ACCOUNT_TEMPORARILY_LOCKED");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "https://meunegocio360.com.br/problemas/conta-bloqueada",
+            "Conta temporariamente bloqueada",
+            "Conta temporariamente bloqueada por tentativas excessivas.",
+            request,
+            "ACCOUNT_TEMPORARILY_LOCKED");
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfter))
         .body(problem);
   }
 
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ProblemDetail> handleUnexpected(
-      Exception ex, WebRequest request) {
-    log.error("Erro interno inesperado", ex);
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ProblemDetail> handleAccessDenied(
+      AccessDeniedException ex, WebRequest request) {
+    // Denegações de @PreAuthorize (RNF-BE-47) chegam até aqui; sem um handler específico,
+    // o handler genérico responderia 500 em vez de 403.
     ProblemDetail problem = createProblem(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        "https://meunegocio360.com.br/problemas/erro-interno",
-        "Erro interno",
-        "Ocorreu um erro inesperado.",
-        request, "INTERNAL_ERROR");
+        HttpStatus.FORBIDDEN,
+        "https://meunegocio360.com.br/problemas/sem-permissao",
+        "Sem permissão",
+        "Você não tem permissão para executar esta operação.",
+        request, "ACCESS_DENIED");
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
+  }
+
+  @ExceptionHandler(EmpresaService.CompanyNotRegisteredException.class)
+  public ResponseEntity<ProblemDetail> handleCompanyNotRegistered(
+      EmpresaService.CompanyNotRegisteredException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.NOT_FOUND,
+            "https://meunegocio360.com.br/problemas/empresa-nao-cadastrada",
+            "Empresa não cadastrada",
+            ex.getMessage(),
+            request,
+            "COMPANY_NOT_REGISTERED");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+  }
+
+  @ExceptionHandler(EmpresaService.CompanyCnpjDuplicateException.class)
+  public ResponseEntity<ProblemDetail> handleCompanyCnpjDuplicate(
+      EmpresaService.CompanyCnpjDuplicateException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/empresa-cnpj-duplicado",
+            "CNPJ já cadastrado",
+            ex.getMessage(),
+            request,
+            "COMPANY_CNPJ_DUPLICATE");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(EmpresaService.CompanyAlreadyActiveException.class)
+  public ResponseEntity<ProblemDetail> handleCompanyAlreadyActive(
+      EmpresaService.CompanyAlreadyActiveException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/empresa-ja-ativa",
+            "Já existe empresa ativa",
+            ex.getMessage(),
+            request,
+            "COMPANY_ALREADY_ACTIVE");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(EmpresaAtiva.CompanyNotActiveException.class)
+  public ResponseEntity<ProblemDetail> handleCompanyNotActive(
+      EmpresaAtiva.CompanyNotActiveException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/empresa-nao-ativa",
+            "Empresa não ativa",
+            ex.getMessage(),
+            request,
+            "COMPANY_NOT_ACTIVE");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  public ResponseEntity<ProblemDetail> handleVersionConflict(
+      ObjectOptimisticLockingFailureException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/conflito-de-versao",
+            "Conflito de versão",
+            "A versão informada está desatualizada. Recarregue os dados e tente novamente.",
+            request,
+            "VERSION_CONFLICT");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ProblemDetail> handleDataIntegrity(
+      DataIntegrityViolationException ex, WebRequest request) {
+    // Violações de integridade do banco NUNCA chegam ao cliente como 500 genérico
+    // (RNF-BE-15): traduzimos para o erro de negócio correspondente.
+    String detalhe =
+        ex.getMostSpecificCause() != null && ex.getMostSpecificCause().getMessage() != null
+            ? ex.getMostSpecificCause().getMessage()
+            : String.valueOf(ex.getMessage());
+    if (detalhe.contains("uk_empresa_cnpj")) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              createProblem(
+                  HttpStatus.CONFLICT,
+                  "https://meunegocio360.com.br/problemas/empresa-cnpj-duplicado",
+                  "CNPJ já cadastrado",
+                  "CNPJ já cadastrado em outra empresa.",
+                  request,
+                  "COMPANY_CNPJ_DUPLICATE"));
+    }
+    if (detalhe.contains("uk_empresa_ativa_unica")) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              createProblem(
+                  HttpStatus.CONFLICT,
+                  "https://meunegocio360.com.br/problemas/empresa-ja-ativa",
+                  "Já existe empresa ativa",
+                  "Já existe uma empresa ativa.",
+                  request,
+                  "COMPANY_ALREADY_ACTIVE"));
+    }
+    log.error("Violação de integridade do banco não mapeada", ex);
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "https://meunegocio360.com.br/problemas/erro-interno",
+            "Erro interno",
+            "Ocorreu um erro inesperado.",
+            request,
+            "INTERNAL_ERROR");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
+  }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex, WebRequest request) {
+    log.error("Erro interno inesperado", ex);
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "https://meunegocio360.com.br/problemas/erro-interno",
+            "Erro interno",
+            "Ocorreu um erro inesperado.",
+            request,
+            "INTERNAL_ERROR");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
   }
 
   public String buildUnauthorized(
       jakarta.servlet.http.HttpServletRequest request,
       org.springframework.security.core.AuthenticationException authException) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.UNAUTHORIZED,
-        "https://meunegocio360.com.br/problemas/nao-autorizado",
-        "Não autenticado",
-        "Token de acesso ausente, inválido ou expirado.",
-        request, "UNAUTHORIZED");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNAUTHORIZED,
+            "https://meunegocio360.com.br/problemas/nao-autorizado",
+            "Não autenticado",
+            "Token de acesso ausente, inválido ou expirado.",
+            request,
+            "UNAUTHORIZED");
     problem.setProperty("traceId", resolveTraceId());
     return toJson(problem);
   }
 
-  public String buildForbiddenOrigin(jakarta.servlet.http.HttpServletRequest request) {
-    ProblemDetail problem = createProblem(
-        HttpStatus.FORBIDDEN,
-        "https://meunegocio360.com.br/problemas/origem-nao-permitida",
-        "Origem não permitida",
-        "Origem não permitida.",
-        request, "ORIGIN_NOT_ALLOWED");
+  public String buildForbidden(jakarta.servlet.http.HttpServletRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.FORBIDDEN,
+            "https://meunegocio360.com.br/problemas/sem-permissao",
+            "Sem permissão",
+            "Você não tem permissão para executar esta operação.",
+            request,
+            "ACCESS_DENIED");
     problem.setProperty("traceId", resolveTraceId());
     return toJson(problem);
   }
 
   private ProblemDetail createProblem(
-      HttpStatusCode status, String type, String title, String detail,
-      WebRequest request, String code) {
+      HttpStatusCode status,
+      String type,
+      String title,
+      String detail,
+      WebRequest request,
+      String code) {
     ProblemDetail problem = ProblemDetail.forStatus(status);
     problem.setType(URI.create(type));
     problem.setTitle(title);
@@ -184,8 +343,12 @@ public class GlobalExceptionHandler {
   }
 
   private ProblemDetail createProblem(
-      HttpStatusCode status, String type, String title, String detail,
-      jakarta.servlet.http.HttpServletRequest request, String code) {
+      HttpStatusCode status,
+      String type,
+      String title,
+      String detail,
+      jakarta.servlet.http.HttpServletRequest request,
+      String code) {
     ProblemDetail problem = ProblemDetail.forStatus(status);
     problem.setType(URI.create(type));
     problem.setTitle(title);

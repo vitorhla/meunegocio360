@@ -78,20 +78,57 @@ public class Usuario {
     this.atualizadoEm = Instant.now();
   }
 
-  public UUID getId() { return id; }
-  public String getNome() { return nome; }
-  public String getEmail() { return email; }
-  public String getSenhaHash() { return senhaHash; }
-  public Perfil getPerfil() { return perfil; }
-  public boolean isAtivo() { return ativo; }
-  public int getTentativasFalhas() { return tentativasFalhas; }
-  public Instant getBloqueadoAte() { return bloqueadoAte; }
-  public Instant getUltimoLoginEm() { return ultimoLoginEm; }
-  public Instant getCriadoEm() { return criadoEm; }
-  public Instant getAtualizadoEm() { return atualizadoEm; }
-  public long getVersao() { return versao; }
+  public UUID getId() {
+    return id;
+  }
 
-  public void setAtivo(boolean ativo) { this.ativo = ativo; }
+  public String getNome() {
+    return nome;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public String getSenhaHash() {
+    return senhaHash;
+  }
+
+  public Perfil getPerfil() {
+    return perfil;
+  }
+
+  public boolean isAtivo() {
+    return ativo;
+  }
+
+  public int getTentativasFalhas() {
+    return tentativasFalhas;
+  }
+
+  public Instant getBloqueadoAte() {
+    return bloqueadoAte;
+  }
+
+  public Instant getUltimoLoginEm() {
+    return ultimoLoginEm;
+  }
+
+  public Instant getCriadoEm() {
+    return criadoEm;
+  }
+
+  public Instant getAtualizadoEm() {
+    return atualizadoEm;
+  }
+
+  public long getVersao() {
+    return versao;
+  }
+
+  public void setAtivo(boolean ativo) {
+    this.ativo = ativo;
+  }
 
   public void registrarFalha(int maxTentativas, long bloqueioMinutos) {
     this.tentativasFalhas++;

@@ -11,10 +11,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Documentação OpenAPI/Swagger da API (springdoc).
  *
- * <p>Convenção do projeto: TODO endpoint novo DEVE ser documentado com
- * {@code @Tag}, {@code @Operation} e {@code @ApiResponse} (códigos de erro em
- * {@code application/problem+json}), e os DTOs de entrada/saída devem usar
- * {@code @Schema} nos campos.
+ * <p>Convenção do projeto: TODO endpoint novo DEVE ser documentado com {@code @Tag},
+ * {@code @Operation} e {@code @ApiResponse} (códigos de erro em {@code application/problem+json}),
+ * e os DTOs de entrada/saída devem usar {@code @Schema} nos campos.
  */
 @Configuration
 public class OpenApiConfig {
@@ -31,7 +30,10 @@ public class OpenApiConfig {
                     "Microsserviço Núcleo do MeuNegocio360. "
                         + "Autenticação por e-mail/senha com JWT de acesso (HS256) e refresh token "
                         + "rotativo em cookie HttpOnly. Erros em application/problem+json (RFC 9457) "
-                        + "com o campo `code` para identificação do tipo de erro.")
+                        + "com o campo `code` para identificação do tipo de erro. "
+                        + "A empresa (RF-BE-002) é o contexto de todos os módulos (RNF-096): sem "
+                        + "empresa ativa, a criação de registros de negócio retorna 422 com code "
+                        + "COMPANY_NOT_ACTIVE.")
                 .version("v1")
                 .license(new License().name("Proprietary")))
         .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME))

@@ -7,8 +7,7 @@ import java.util.UUID;
 
 @Schema(description = "Dados públicos do usuário.")
 public record UsuarioResponse(
-    @Schema(description = "Identificador único do usuário.", example = "6f1e...-uuid")
-        UUID id,
+    @Schema(description = "Identificador único do usuário.", example = "6f1e...-uuid") UUID id,
     @Schema(description = "Nome completo do usuário.", example = "Administrador") String nome,
     @Schema(description = "E-mail do usuário.", example = "admin@meunegocio360.com.br")
         String email,

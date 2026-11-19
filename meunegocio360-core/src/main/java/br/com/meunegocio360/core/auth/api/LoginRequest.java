@@ -10,9 +10,14 @@ import jakarta.validation.constraints.Size;
     example = "{\"email\":\"admin@meunegocio360.com.br\",\"senha\":\"Admin123!\"}")
 public record LoginRequest(
     @Schema(description = "E-mail do usuário.", example = "admin@meunegocio360.com.br")
-        @NotBlank @Email(message = "deve ser um e-mail válido") @Size(max = 160) String email,
+        @NotBlank
+        @Email(message = "deve ser um e-mail válido")
+        @Size(max = 160)
+        String email,
     @Schema(
-        description = "Senha. Mínimo 8 e máximo 72 caracteres (limite do BCrypt).",
-        example = "Admin123!",
-        hidden = true)
-        @NotBlank @Size(min = 8, max = 72) String senha) {}
+            description = "Senha. Mínimo 8 e máximo 72 caracteres (limite do BCrypt).",
+            example = "Admin123!",
+            hidden = true)
+        @NotBlank
+        @Size(min = 8, max = 72)
+        String senha) {}

@@ -1,8 +1,8 @@
 package br.com.meunegocio360.core.auth.api;
 
+import br.com.meunegocio360.core.application.AuthenticatedUser;
 import br.com.meunegocio360.core.auth.application.AuthService;
 import br.com.meunegocio360.core.auth.application.AuthService.OriginNotAllowedException;
-import br.com.meunegocio360.core.application.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,8 +48,11 @@ public class AuthController {
     this.authService = authService;
     this.refreshExpiracaoDias = refreshExpiracaoDias;
     this.cookieSecure = cookieSecure;
-    this.allowedOrigins = java.util.Arrays.stream(allowedOrigins.split(","))
-        .map(String::trim).filter(s -> !s.isEmpty()).toList();
+    this.allowedOrigins =
+        java.util.Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
   }
 
   @Operation(
@@ -179,16 +182,24 @@ public class AuthController {
 
   private String criarCookieRefresh(String value) {
     return ResponseCookie.from(COOKIE_NAME, value)
-        .httpOnly(true).secure(cookieSecure).sameSite("Strict")
-        .path("/api/v1/auth").maxAge(Duration.ofDays(refreshExpiracaoDias))
-        .build().toString();
+        .httpOnly(true)
+        .secure(cookieSecure)
+        .sameSite("Strict")
+        .path("/api/v1/auth")
+        .maxAge(Duration.ofDays(refreshExpiracaoDias))
+        .build()
+        .toString();
   }
 
   private String expirarCookieRefresh() {
     return ResponseCookie.from(COOKIE_NAME, "")
-        .httpOnly(true).secure(cookieSecure).sameSite("Strict")
-        .path("/api/v1/auth").maxAge(0)
-        .build().toString();
+        .httpOnly(true)
+        .secure(cookieSecure)
+        .sameSite("Strict")
+        .path("/api/v1/auth")
+        .maxAge(0)
+        .build()
+        .toString();
   }
 
   private void verificarOrigin(String origin) {

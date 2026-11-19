@@ -68,8 +68,7 @@ public class TokenService {
 
   public String hashRefreshToken(String valor) {
     try {
-      java.security.MessageDigest digest =
-          java.security.MessageDigest.getInstance("SHA-256");
+      java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
       byte[] hash = digest.digest(valor.getBytes(java.nio.charset.StandardCharsets.UTF_8));
       StringBuilder hex = new StringBuilder(64);
       for (byte b : hash) {

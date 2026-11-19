@@ -46,9 +46,13 @@ public class AuthService {
     this.refreshExpiracaoDias = refreshExpiracaoDias;
   }
 
-  public record LoginResult(String accessToken, int expiresIn, UsuarioData usuario, String refreshTokenValue) {}
+  public record LoginResult(
+      String accessToken, int expiresIn, UsuarioData usuario, String refreshTokenValue) {}
+
   public record UsuarioData(UUID id, String nome, String email, Perfil perfil) {}
-  public record RefreshResult(String accessToken, int expiresIn, UsuarioData usuario, String refreshTokenValue) {}
+
+  public record RefreshResult(
+      String accessToken, int expiresIn, UsuarioData usuario, String refreshTokenValue) {}
 
   @Transactional
   public LoginResult login(String email, String senha) {
@@ -56,7 +60,8 @@ public class AuthService {
     Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email.trim()).orElse(null);
 
     if (usuario == null) {
-      passwordEncoder.matches(senha, "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+      passwordEncoder.matches(
+          senha, "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
       throw new InvalidCredentialsException();
     }
 
@@ -82,14 +87,18 @@ public class AuthService {
     String tokenHash = tokenService.hashRefreshToken(refreshValor);
 
     RefreshToken refreshToken =
-        new RefreshToken(usuario.getId(), UUID.randomUUID(), tokenHash,
+        new RefreshToken(
+            usuario.getId(),
+            UUID.randomUUID(),
+            tokenHash,
             agora.plusSeconds(refreshExpiracaoDias * 24L * 3600L));
     refreshTokenRepository.save(refreshToken);
 
     return new LoginResult(
         accessToken.getTokenValue(),
         tokenService.getExpiracaoMinutos() * 60,
-        new UsuarioData(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil()),
+        new UsuarioData(
+            usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil()),
         refreshValor);
   }
 
@@ -120,8 +129,10 @@ public class AuthService {
     token.revogar();
     refreshTokenRepository.save(token);
 
-    Usuario usuario = usuarioRepository.findById(token.getUsuarioId())
-        .orElseThrow(InvalidRefreshTokenException::new);
+    Usuario usuario =
+        usuarioRepository
+            .findById(token.getUsuarioId())
+            .orElseThrow(InvalidRefreshTokenException::new);
 
     if (!usuario.isAtivo() || usuario.estaBloqueado(agora)) {
       throw new InvalidRefreshTokenException();
@@ -130,7 +141,10 @@ public class AuthService {
     String novoValor = tokenService.gerarValorRefreshToken();
     String novoHash = tokenService.hashRefreshToken(novoValor);
     RefreshToken novoToken =
-        new RefreshToken(usuario.getId(), token.getFamiliaId(), novoHash,
+        new RefreshToken(
+            usuario.getId(),
+            token.getFamiliaId(),
+            novoHash,
             agora.plusSeconds(refreshExpiracaoDias * 24L * 3600L));
     refreshTokenRepository.save(novoToken);
 
@@ -139,7 +153,8 @@ public class AuthService {
     return new RefreshResult(
         accessToken.getTokenValue(),
         tokenService.getExpiracaoMinutos() * 60,
-        new UsuarioData(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil()),
+        new UsuarioData(
+            usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil()),
         novoValor);
   }
 
@@ -156,9 +171,15 @@ public class AuthService {
   }
 
   public UsuarioData me(UUID usuarioId) {
-    Usuario usuario = usuarioRepository.findById(usuarioId)
-        .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("Usuário não encontrado"));
-    return new UsuarioData(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil());
+    Usuario usuario =
+        usuarioRepository
+            .findById(usuarioId)
+            .orElseThrow(
+                () ->
+                    new org.springframework.security.authentication.BadCredentialsException(
+                        "Usuário não encontrado"));
+    return new UsuarioData(
+        usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil());
   }
 
   private void revogarFamilia(UUID familiaId) {
@@ -171,23 +192,33 @@ public class AuthService {
   }
 
   public static class InvalidCredentialsException extends RuntimeException {
-    public InvalidCredentialsException() { super("E-mail ou senha inválidos."); }
+    public InvalidCredentialsException() {
+      super("E-mail ou senha inválidos.");
+    }
   }
 
   public static class AccountLockedException extends RuntimeException {
     private final Instant bloqueadoAte;
+
     public AccountLockedException(Instant bloqueadoAte) {
       super("Conta temporariamente bloqueada por tentativas excessivas.");
       this.bloqueadoAte = bloqueadoAte;
     }
-    public Instant getBloqueadoAte() { return bloqueadoAte; }
+
+    public Instant getBloqueadoAte() {
+      return bloqueadoAte;
+    }
   }
 
   public static class InvalidRefreshTokenException extends RuntimeException {
-    public InvalidRefreshTokenException() { super("Refresh token inválido, expirado ou revogado."); }
+    public InvalidRefreshTokenException() {
+      super("Refresh token inválido, expirado ou revogado.");
+    }
   }
 
   public static class OriginNotAllowedException extends RuntimeException {
-    public OriginNotAllowedException() { super("Origem não permitida."); }
+    public OriginNotAllowedException() {
+      super("Origem não permitida.");
+    }
   }
 }

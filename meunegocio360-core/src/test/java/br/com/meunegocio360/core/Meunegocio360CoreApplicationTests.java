@@ -13,6 +13,5 @@ import org.springframework.test.context.ActiveProfiles;
 class Meunegocio360CoreApplicationTests {
 
   @Test
-  void contextLoads() {
-  }
+  void contextLoads() {}
 }
