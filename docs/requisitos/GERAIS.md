@@ -2,16 +2,15 @@
 
 | | |
 | --- | --- |
-| **Versão** | 2.1 |
-| **Atualizado em** | 11/11/2026 |
+| **Versão** | 3.0 |
+| **Atualizado em** | 18/11/2026 |
 | **Aplica-se a** | Todos os serviços de backend (`meunegocio360-*`) e ao frontend (`meunegocio360-js`) |
-| **Documentos relacionados** | [`requisitos-be.md`](./requisitos-be.md) · [`requisitos-fe.md`](./requisitos-fe.md) |
-
+| **Requisitos por camada** | [`backend/`](./backend) · [`frontend/`](./frontend) |
 ## 1. Como ler este documento
 
-Este documento reúne os **requisitos não funcionais (RNF) válidos para todo o projeto** e o **índice dos requisitos funcionais (RF)**. Os documentos de backend e frontend herdam tudo o que está aqui e acrescentam apenas o que é específico de cada camada.
+Este documento reúne os **requisitos não funcionais (RNF) válidos para todo o projeto** e o **índice dos requisitos funcionais (RF)**. Os requisitos de cada camada ficam em [`backend/`](./backend) e [`frontend/`](./frontend): cada pasta tem um arquivo de requisitos não funcionais da camada ([`RNF-BE.md`](./backend/RNF-BE.md), [`RNF-FE.md`](./frontend/RNF-FE.md)) e **um arquivo por requisito funcional** (`RF-BE-NNN.md`, `RF-FE-NNN.md`). Todos herdam o que está aqui e acrescentam apenas o que é específico da camada.
 
-Visão do produto, arquitetura, stack, estrutura do repositório, comandos, fluxo de contribuição e implantação estão no [`README.md`](../README.md) e não são repetidos aqui.
+Visão do produto, arquitetura, stack, estrutura do repositório, comandos, fluxo de contribuição e implantação estão no [`README.md`](../../README.md) e não são repetidos aqui.
 
 Convenções de leitura:
 
@@ -21,25 +20,37 @@ Convenções de leitura:
 
 ## 2. Requisitos funcionais
 
-| ID | Camada | Título | Documento |
-| --- | --- | --- | --- |
-| RF-BE-001 | Backend (Núcleo) | Autenticação de usuário (login) e sessão com refresh token | [`requisitos-be.md`](./requisitos-be.md#rf-be-001--autenticação-de-usuário-login) |
-| RF-FE-001 | Frontend | Fluxo de login do usuário, com persistência de sessão | [`requisitos-fe.md`](./requisitos-fe.md#rf-fe-001--fluxo-de-login-do-usuário) |
+| Funcionalidade | ID | Camada | Título | Arquivo |
+| --- | --- | --- | --- | --- |
+| F01 | RF-BE-001 | Backend (Núcleo) | Autenticação de usuário (login) e sessão com refresh token | [`RF-BE-001.md`](./backend/RF-BE-001.md) |
+| F01 | RF-FE-001 | Frontend | Fluxo de login do usuário, com persistência de sessão | [`RF-FE-001.md`](./frontend/RF-FE-001.md) |
+| F02 | RF-BE-002 | Backend (Núcleo) | Cadastro de empresa, parâmetros básicos e perfis de acesso | [`RF-BE-002.md`](./backend/RF-BE-002.md) |
+| F02 | RF-FE-002 | Frontend | Cadastro de empresa, layout da aplicação e guardas de acesso | [`RF-FE-002.md`](./frontend/RF-FE-002.md) |
+| F03 | RF-BE-003 | Backend (Núcleo) | Cadastro de clientes | [`RF-BE-003.md`](./backend/RF-BE-003.md) |
+| F03 | RF-FE-003 | Frontend | Cadastro e busca de clientes | [`RF-FE-003.md`](./frontend/RF-FE-003.md) |
+| F04 | RF-BE-004 | Backend (Núcleo) | Cadastro de fornecedores | [`RF-BE-004.md`](./backend/RF-BE-004.md) |
+| F04 | RF-FE-004 | Frontend | Cadastro e busca de fornecedores | [`RF-FE-004.md`](./frontend/RF-FE-004.md) |
+| F05 | RF-BE-005 | Backend (Núcleo) | Catálogo de produtos e serviços | [`RF-BE-005.md`](./backend/RF-BE-005.md) |
+| F05 | RF-FE-005 | Frontend | Catálogo de produtos e serviços | [`RF-FE-005.md`](./frontend/RF-FE-005.md) |
 
-Novos requisitos DEVEM ser acrescentados a esta tabela e ao documento de sua camada.
+Novos requisitos DEVEM ser acrescentados a esta tabela e criados como um arquivo na pasta de sua camada.
 
 ### 2.1 Escopo de um requisito funcional
 
-Cada RF é entregue de ponta a ponta (especificação, implementação, verificação dos critérios de aceite) e DEVE explicitar o que está **dentro** e **fora** de seu escopo, as dependências que introduz (RNF-015) e as regras de negócio aplicáveis.
+Cada RF é entregue de ponta a ponta (especificação, implementação, verificação dos critérios de aceite) e DEVE explicitar o que está **dentro** e **fora** de seu escopo, as dependências que introduz (RNF-015) e as regras de negócio aplicáveis. Cada RF é desenvolvido em **uma branch própria** (seção 2.3).
 
 ### 2.2 Template de requisito
 
 Todo novo requisito DEVE usar esta estrutura, para que a IA e as pessoas recebam a mesma informação:
 
 ```markdown
-## RF-<BE|FE>-NNN — <Título curto>
+# RF-<BE|FE>-NNN — <Título curto>
+
+**Branch:** `feat/rf-<be|fe>-NNN-<resumo>`
 
 **História de usuário:** Como <perfil>, quero <ação>, para <benefício>.
+
+**Atores e precondições:** <perfis autorizados e o que já deve existir>
 
 **Contexto e dependências:** <o que já existe; requisitos dos quais depende>
 
@@ -67,6 +78,10 @@ Cenário: …
 
 **Extensões opcionais:** <desafios que NÃO fazem parte do requisito>
 ```
+
+### 2.3 Branch por requisito
+
+Cada RF é desenvolvido em uma branch própria, criada a partir da `main` atualizada do fork e nomeada `<tipo>/<id-do-requisito>-<resumo>` em minúsculas, conforme as [convenções do README](../../README.md#63-convenções). A branch do requisito é registrada no campo **Branch** de cada arquivo (ex.: `feat/rf-be-003-clientes`) e um PR NÃO DEVE misturar mais de um RF.
 
 ## 3. Requisitos não funcionais (válidos para todo o projeto)
 
@@ -123,11 +138,11 @@ Referência: **OWASP ASVS nível 1** e **OWASP Top 10**.
 | RNF-032 | Mudanças incompatíveis no contrato DEVEM gerar nova versão de caminho (`/api/v2`). Mudanças compatíveis (campos opcionais novos) não. | Revisão. |
 | RNF-033 | Datas e horas trafegam em **ISO 8601 UTC** (ex.: `2026-11-11T14:30:00Z`); valores monetários como inteiros em centavos ou decimais em *string*, nunca `float`. | Revisão; testes de serialização. |
 
-O formato de erros, a paginação e demais convenções REST estão em [`requisitos-be.md`](./requisitos-be.md#2-convenções-da-api-rest).
+O formato de erros, a paginação e demais convenções REST estão em [`RNF-BE.md`](./backend/RNF-BE.md#2-convenções-da-api-rest).
 
 ### 3.6 Testes e qualidade contínua
 
-Os requisitos de testes automatizados são exigíveis a partir da **fase de testes** do projeto (RNF-016; ver [Contribuições](../README.md#6-contribuições)). Até lá, os critérios de aceite de cada RF são verificados manualmente (Swagger UI e navegador) e o resultado é registrado no PR.
+Os requisitos de testes automatizados são exigíveis a partir da **fase de testes** do projeto (RNF-016; ver [Contribuições](../../README.md#6-contribuições)). Até lá, os critérios de aceite de cada RF são verificados manualmente (Swagger UI e navegador) e o resultado é registrado no PR.
 
 | ID | Requisito | Como verificar |
 | --- | --- | --- |
@@ -173,7 +188,7 @@ Os requisitos de testes automatizados são exigíveis a partir da **fase de test
 
 ### 3.11 Implantação
 
-Frontend no Netlify e backend no Render (passo a passo no [`README.md`](../README.md#7-implantação)).
+Frontend no Netlify e backend no Render (passo a passo no [`README.md`](../../README.md#7-implantação)).
 
 | ID | Requisito |
 | --- | --- |
@@ -183,3 +198,10 @@ Frontend no Netlify e backend no Render (passo a passo no [`README.md`](../READM
 | RNF-103 | O frontend DEVE ser um build estático (`npm run build`, saída `dist/`) servido com *fallback* para as rotas da SPA e DEVE chamar a API **sempre por caminho relativo** (`/api/...`, mesma origem do frontend): em desenvolvimento, pelo `server.proxy` do Vite; em produção, por regra de *rewrite* do Netlify para o Render. O cookie de refresh NUNCA DEVE exigir `SameSite=None`. |
 | RNF-104 | O backend DEVE responder a `/actuator/health` sem autenticação e sem detalhes (RNF-051), para o *health check* do Render. |
 | RNF-105 | O ambiente oficial só DEVE ser implantado a partir da `main` do repositório principal. Branches de forks são implantadas apenas nas contas de seus autores. |
+
+### 3.12 Dados mestres e contexto da empresa
+
+| ID | Requisito |
+| --- | --- |
+| RNF-096 | Toda entidade de negócio DEVE pertencer a uma empresa (`empresa_id`). O valor é resolvido **no servidor**, a partir da empresa ativa ([RF-BE-002](./backend/RF-BE-002.md)), e NUNCA é informado nem aceito do cliente. Sem empresa ativa, nenhuma entidade de negócio é criada. |
+| RNF-097 | Registros mestres (clientes, fornecedores, produtos, serviços) que possuem histórico NÃO DEVEM ser excluídos: são **inativados**. A exclusão só é permitida sem histórico e, quando negada, retorna erro de negócio claro e específico, nunca um erro técnico genérico. |

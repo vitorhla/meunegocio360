@@ -106,3 +106,52 @@ $theme-colors: map-merge(
     transition-duration: 0.01ms !important;
   }
 }
+
+// 7. Alvos interativos >= 44×44 px (RNF-FE-23)
+// ------------------------------------------------------------
+.btn {
+  min-height: 44px;
+}
+
+.form-control,
+.form-select {
+  min-height: 44px;
+}
+
+.nav-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+// 8. Navbar laranja com texto preto (RNF-FE-2.2)
+// ------------------------------------------------------------
+.navbar.bg-primary {
+  --bs-navbar-color: #1f1612;
+  --bs-navbar-hover-color: #4a3f39;
+  --bs-navbar-active-color: #1f1612;
+}
+
+.navbar.bg-primary .nav-link.active {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+// 9. Utilitário para truncar nome da empresa na navbar sem rolagem
+// ------------------------------------------------------------
+.empresa-navbar {
+  max-width: 200px;
+}
+
+// 10. Marca (logo/ícone)
+// ------------------------------------------------------------
+.auth-brand-logo {
+  width: 100%;
+  max-width: 190px;
+  height: auto;
+}
+
+.navbar-brand-logo {
+  height: 30px;
+  width: auto;
+}

@@ -6,7 +6,12 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { AuthProvider, useAuth } from '../features/auth/index.js';
 import LoadingSpinner from '../shared/ui/LoadingSpinner.jsx';
 import ErrorScreen from '../shared/ui/ErrorScreen.jsx';
-import RequireAuth from '../shared/ui/RequireAuth.jsx';
+import RequireAuth from './guards/RequireAuth.jsx';
+import RequireRole from './guards/RequireRole.jsx';
+import { EmpresaProvider } from '../features/empresa/index.js';
+import { Perfis } from '../shared/lib/perfis.js';
+import RequireEmpresa from './guards/RequireEmpresa.jsx';
+import AppLayout from './layout/AppLayout.jsx';
 
 // Lazy loading das páginas (RNF-FE-05)
 const LoginPage = lazy(() =>
@@ -14,6 +19,12 @@ const LoginPage = lazy(() =>
 );
 const HomePage = lazy(() =>
   import('../features/auth/pages/HomePage.jsx').then((m) => ({ default: m.default })),
+);
+const EmpresaPage = lazy(() =>
+  import('../features/empresa/pages/EmpresaPage.jsx').then((m) => ({ default: m.default })),
+);
+const CadastroEmpresaPage = lazy(() =>
+  import('../features/empresa/pages/CadastroEmpresaPage.jsx').then((m) => ({ default: m.default })),
 );
 const NotFoundPage = lazy(() =>
   import('../features/auth/pages/NotFoundPage.jsx').then((m) => ({ default: m.default })),
@@ -45,6 +56,7 @@ export default function App() {
         <AuthGate>
           <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
             <Routes>
+              {/* Login (público) */}
               <Route
                 path="/login"
                 element={
@@ -53,16 +65,48 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="/"
-                element={
-                  <RequireAuth>
-                    <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
-                      <HomePage />
-                    </Suspense>
-                  </RequireAuth>
-                }
-              />
+
+              {/* Rotas protegidas (autenticadas) */}
+              <Route element={<RequireAuth />}>
+                <Route element={<EmpresaProvider />}>
+                  <Route element={<AppLayout />}>
+                    {/* Início — exige empresa ativa */}
+                    <Route
+                      index
+                      element={
+                        <RequireEmpresa>
+                          <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                            <HomePage />
+                          </Suspense>
+                        </RequireEmpresa>
+                      }
+                    />
+                    {/* Empresa (consulta/edição) — acesso "Autenticado" (tabela
+                        de rotas do RF-FE-002); a EmpresaPage trata 'ausente' */}
+                    <Route
+                      path="empresa"
+                      element={
+                        <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                          <EmpresaPage />
+                        </Suspense>
+                      }
+                    />
+                    {/* Cadastro da empresa — ADMIN, sem empresa ativa */}
+                    <Route
+                      path="empresa/cadastro"
+                      element={
+                        <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                          <RequireRole roles={[Perfis.ADMIN]}>
+                            <CadastroEmpresaPage />
+                          </RequireRole>
+                        </Suspense>
+                      }
+                    />
+                  </Route>
+                </Route>
+              </Route>
+
+              {/* 404 */}
               <Route
                 path="*"
                 element={

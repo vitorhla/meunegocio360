@@ -9,6 +9,7 @@ import { Form, Button, Alert, Spinner, Card } from 'react-bootstrap';
 import loginSchema from '../schemas.js';
 import { login } from '../api/authApi.js';
 import { useAuth } from '../hooks/AuthContext.jsx';
+import brandLogo from '../../../assets/logo_meunegocio360_v2_sem_fundo.png';
 
 export default function LoginForm() {
   const { setSession } = useAuth();
@@ -108,10 +109,12 @@ export default function LoginForm() {
       style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}
     >
       <Card.Body className="p-4">
-        <h1 className="fs-3 text-center mb-1">Entrar</h1>
-        <p className="text-center text-secondary mb-4" style={{ fontSize: '0.95rem' }}>
-          MeuNegócio360
-        </p>
+        <img
+          className="auth-brand-logo d-block mx-auto mb-3"
+          src={brandLogo}
+          alt="MeuNegócio360"
+        />
+        <h1 className="fs-3 text-center mb-4">Entrar</h1>
 
         {serverError && (
           <Alert variant="danger" role="alert" className="py-2 small">

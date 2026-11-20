@@ -6,7 +6,7 @@ import { Alert, Button } from 'react-bootstrap';
 
 export default function ErrorScreen({ message, onRetry }) {
   return (
-    <main className="min-vh-100 d-flex flex-column align-items-center justify-content-center px-3 text-center">
+    <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center px-3 text-center">
       <Alert variant="danger" className="text-start" style={{ maxWidth: 480 }}>
         <Alert.Heading as="h2" className="fs-5">
           Erro de conexão
@@ -22,6 +22,6 @@ export default function ErrorScreen({ message, onRetry }) {
           Tentar novamente
         </Button>
       )}
-    </main>
+    </div>
   );
 }
