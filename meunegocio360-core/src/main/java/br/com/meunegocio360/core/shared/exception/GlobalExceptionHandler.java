@@ -161,12 +161,14 @@ public class GlobalExceptionHandler {
       AccessDeniedException ex, WebRequest request) {
     // Denegações de @PreAuthorize (RNF-BE-47) chegam até aqui; sem um handler específico,
     // o handler genérico responderia 500 em vez de 403.
-    ProblemDetail problem = createProblem(
-        HttpStatus.FORBIDDEN,
-        "https://meunegocio360.com.br/problemas/sem-permissao",
-        "Sem permissão",
-        "Você não tem permissão para executar esta operação.",
-        request, "ACCESS_DENIED");
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.FORBIDDEN,
+            "https://meunegocio360.com.br/problemas/sem-permissao",
+            "Sem permissão",
+            "Você não tem permissão para executar esta operação.",
+            request,
+            "ACCESS_DENIED");
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
   }
 

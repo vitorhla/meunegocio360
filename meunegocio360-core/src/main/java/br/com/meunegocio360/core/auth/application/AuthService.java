@@ -60,8 +60,11 @@ public class AuthService {
     Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email.trim()).orElse(null);
 
     if (usuario == null) {
+      // Hash dummy com o mesmo custo do bcrypt real (igualar tempo de resposta, sem
+      // revelar se o e-mail existe). O prefixo {bcrypt} é exigido pelo
+      // DelegatingPasswordEncoder; sem ele, matches() lança IllegalArgumentException.
       passwordEncoder.matches(
-          senha, "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+          senha, "{bcrypt}$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
       throw new InvalidCredentialsException();
     }
 
