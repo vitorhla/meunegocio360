@@ -155,3 +155,46 @@ $theme-colors: map-merge(
   height: 30px;
   width: auto;
 }
+
+// 11. Listagens e seletor de busca (RF-FE-003)
+// ------------------------------------------------------------
+.list-toolbar-search {
+  min-width: 220px;
+}
+
+// Alvos de paginação com >= 44 px (RNF-FE-23)
+.paginacao .page-link {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Combobox de busca (SearchSelect)
+.search-select {
+  position: relative;
+}
+
+.search-select-listbox {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: $zindex-dropdown;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  background-color: $white;
+}
+
+.search-select-option {
+  cursor: pointer;
+}
+
+// Opção ativa: Laranja com texto PRETO da marca (contraste 4,8:1)
+.search-select-option-active {
+  background-color: $primary;
+  color: $color-contrast-dark;
+}

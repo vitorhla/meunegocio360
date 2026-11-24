@@ -2,7 +2,7 @@
 // ConfirmModal — modal de confirmação acessível
 // ============================================================
 import { useCallback, useEffect, useRef } from 'react';
-import { Modal, Button, Spinner } from 'react-bootstrap';
+import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 
 /**
  * Modal de confirmação com gerenciamento de foco.
@@ -20,6 +20,11 @@ import { Modal, Button, Spinner } from 'react-bootstrap';
  * @param {boolean}  [props.busy]
  * @param {function} props.onConfirm
  * @param {function} props.onCancel
+ * @param {string}   [props.alert] — alerta de erro de negócio exibido
+ *   no corpo (o modal permanece aberto; RNF-FE-29)
+ * @param {{label:string, onClick:function, variant?:string}} [props.extraAction]
+ *   — botão extra no rodapé (ex.: "Inativar cliente" no erro de
+ *   exclusão com histórico)
  */
 export default function ConfirmModal({
   show,
@@ -31,6 +36,8 @@ export default function ConfirmModal({
   busy,
   onConfirm,
   onCancel,
+  alert,
+  extraAction,
 }) {
   const prevFocusRef = useRef(null);
   const cancelRef = useRef(null);
@@ -62,9 +69,23 @@ export default function ConfirmModal({
         <Modal.Title as="h5">{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p className="mb-0 small">{message}</p>
+        <p className="small">{message}</p>
+        {alert && (
+          <Alert variant="danger" role="alert" className="small mt-2 mb-0 py-2">
+            {alert}
+          </Alert>
+        )}
       </Modal.Body>
       <Modal.Footer>
+        {extraAction && (
+          <Button
+            variant={extraAction.variant || 'outline-danger'}
+            onClick={extraAction.onClick}
+            disabled={busy}
+          >
+            {extraAction.label}
+          </Button>
+        )}
         <Button
           ref={cancelRef}
           variant="outline-dark"

@@ -98,6 +98,21 @@ function getBaseUrl() {
   return import.meta.env.VITE_API_BASE_URL || '/api/v1';
 }
 
+/**
+ * Monta a query string de uma lista de parâmetros, omitindo valores
+ * undefined/null/'' (usado pelas listagens paginadas com filtros).
+ * @param {object} params
+ * @returns {string} com "?" no início, ou "" quando não há parâmetros
+ */
+export function buildQueryString(params = {}) {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') sp.set(k, String(v));
+  }
+  const s = sp.toString();
+  return s ? `?${s}` : '';
+}
+
 /** Tenta extrair o corpo problem+json */
 async function parseProblemJson(response) {
   try {

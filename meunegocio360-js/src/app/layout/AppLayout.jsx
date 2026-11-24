@@ -5,6 +5,7 @@ import { NavLink, Outlet } from 'react-router';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { useAuth } from '../../features/auth/index.js';
 import { useEmpresa } from '../../features/empresa/index.js';
+import { Perfis } from '../../shared/lib/perfis.js';
 import usePageTitle from '../../shared/lib/usePageTitle.js';
 import brandIcon from '../../assets/icone_meunegocio360_branca.png';
 
@@ -63,8 +64,24 @@ export default function AppLayout() {
                   Empresa
                 </NavLink>
               </Nav.Item>
-              {/* FE-003: + Clientes */}
-              {/* FE-004: + Fornecedores */}
+              {/* FE-003: Clientes (ADMIN e OPERADOR_COMERCIAL) */}
+              {(usuario?.perfil === Perfis.ADMIN ||
+                usuario?.perfil === Perfis.OPERADOR_COMERCIAL) && (
+                <Nav.Item>
+                  <NavLink to="/clientes" className="nav-link">
+                    Clientes
+                  </NavLink>
+                </Nav.Item>
+              )}
+              {/* FE-004: Fornecedores (ADMIN e OPERADOR_FINANCEIRO) */}
+              {(usuario?.perfil === Perfis.ADMIN ||
+                usuario?.perfil === Perfis.OPERADOR_FINANCEIRO) && (
+                <Nav.Item>
+                  <NavLink to="/fornecedores" className="nav-link">
+                    Fornecedores
+                  </NavLink>
+                </Nav.Item>
+              )}
               {/* FE-005: + Catálogo */}
 
               <span className="text-muted mx-1 small">{usuario?.nome}</span>
