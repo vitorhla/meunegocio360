@@ -3,6 +3,7 @@ package br.com.meunegocio360.core.empresa.application;
 import br.com.meunegocio360.core.empresa.domain.Empresa;
 import br.com.meunegocio360.core.empresa.domain.EmpresaRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,15 @@ public class EmpresaService {
     return empresaRepository
         .findAtiva()
         .map(EmpresaData::from)
-        .orElseThrow(CompanyNotRegisteredException::new);
+        .orElseThrow(
+            () ->
+                new CompanyNotRegisteredException(
+                    "Nenhuma empresa ativa cadastrada.", empresaRepository.existsByAtivaFalse()));
+  }
+
+  /** Lista todas as empresas (ativas e inativas), da mais antiga para a mais nova. */
+  public List<EmpresaData> listar() {
+    return empresaRepository.findAll().stream().map(EmpresaData::from).toList();
   }
 
   /**
@@ -150,7 +159,10 @@ public class EmpresaService {
   private Empresa buscarOu404(UUID id) {
     return empresaRepository
         .findById(id)
-        .orElseThrow(() -> new CompanyNotRegisteredException("Empresa não encontrada."));
+        .orElseThrow(
+            () ->
+                new CompanyNotRegisteredException(
+                    "Empresa não encontrada.", empresaRepository.existsByAtivaFalse()));
   }
 
   private void verificarVersao(Empresa empresa, long versao, UUID id) {
@@ -174,12 +186,25 @@ public class EmpresaService {
   }
 
   public static class CompanyNotRegisteredException extends RuntimeException {
+
+    private final boolean existeInativa;
+
     public CompanyNotRegisteredException() {
-      super("Nenhuma empresa ativa cadastrada.");
+      this("Nenhuma empresa ativa cadastrada.", false);
     }
 
     public CompanyNotRegisteredException(String detail) {
+      this(detail, false);
+    }
+
+    public CompanyNotRegisteredException(String detail, boolean existeInativa) {
       super(detail);
+      this.existeInativa = existeInativa;
+    }
+
+    /** Existe empresa inativa no sistema (orienta a reativação na interface). */
+    public boolean existeInativa() {
+      return existeInativa;
     }
   }
 

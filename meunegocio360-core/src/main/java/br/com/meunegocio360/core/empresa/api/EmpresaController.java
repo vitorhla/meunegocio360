@@ -123,6 +123,7 @@ public class EmpresaController {
         "detail": "Nenhuma empresa ativa cadastrada.",
         "instance": "/api/v1/empresa",
         "code": "COMPANY_NOT_REGISTERED",
+        "existeInativa": true,
         "traceId": "9f1c2e7a-4b6e-4c1d-8a2f-5f6a2d1f9a10"
       }
       """;
@@ -177,8 +178,10 @@ public class EmpresaController {
       description =
           "Retorna a empresa ativa (no máximo uma por instalação, RN-02). Retorna 404 com code"
               + " COMPANY_NOT_REGISTERED quando não existe empresa ativa — a interface usa isso"
-              + " para iniciar o primeiro cadastro. Qualquer perfil autenticado pode consultar"
-              + " (RN-03).")
+              + " para iniciar o primeiro cadastro. O 404 inclui a propriedade `existeInativa`,"
+              + " que indica se há empresa inativa no sistema (para a interface orientar a"
+              + " reativação; a lista completa fica em GET /api/v1/empresas). Qualquer perfil"
+              + " autenticado pode consultar (RN-03).")
   @ApiResponses(
       value = {
         @ApiResponse(
