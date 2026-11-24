@@ -53,6 +53,21 @@ const EditarFornecedorPage = lazy(() =>
 const FornecedorSelectDevPage = lazy(() =>
   import('../features/fornecedores/pages/FornecedorSelectDevPage.jsx').then((m) => ({ default: m.default })),
 );
+const CatalogoPage = lazy(() =>
+  import('../features/catalogo/pages/CatalogoPage.jsx').then((m) => ({ default: m.default })),
+);
+const NovoItemPage = lazy(() =>
+  import('../features/catalogo/pages/NovoItemPage.jsx').then((m) => ({ default: m.default })),
+);
+const EditarItemPage = lazy(() =>
+  import('../features/catalogo/pages/EditarItemPage.jsx').then((m) => ({ default: m.default })),
+);
+const CategoriasPage = lazy(() =>
+  import('../features/catalogo/pages/CategoriasPage.jsx').then((m) => ({ default: m.default })),
+);
+const ItemSelectDevPage = lazy(() =>
+  import('../features/catalogo/pages/ItemSelectDevPage.jsx').then((m) => ({ default: m.default })),
+);
 
 /**
  * Roteador padrão das rotas de clientes (RF-FE-003):
@@ -77,6 +92,22 @@ function RotasClientes({ children }) {
 function RotasFornecedores({ children }) {
   return (
     <RequireRole roles={[Perfis.ADMIN, Perfis.OPERADOR_FINANCEIRO]}>
+      <RequireEmpresa>
+        <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+          {children}
+        </Suspense>
+      </RequireEmpresa>
+    </RequireRole>
+  );
+}
+
+/**
+ * Roteador padrão das rotas do catálogo (RF-FE-005):
+ * perfil (ADMIN/OPERADOR_COMERCIAL) + empresa ativa.
+ */
+function RotasCatalogo({ children }) {
+  return (
+    <RequireRole roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}>
       <RequireEmpresa>
         <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
           {children}
@@ -208,7 +239,40 @@ export default function App() {
                         </RotasFornecedores>
                       }
                     />
-                    {/* Apoio DEV — RF-FE-003/004 (registrado somente em DEV) */}
+                    {/* Catálogo — RF-FE-005 (ADMIN e OPERADOR_COMERCIAL) */}
+                    <Route
+                      path="catalogo"
+                      element={
+                        <RotasCatalogo>
+                          <CatalogoPage />
+                        </RotasCatalogo>
+                      }
+                    />
+                    <Route
+                      path="catalogo/novo"
+                      element={
+                        <RotasCatalogo>
+                          <NovoItemPage />
+                        </RotasCatalogo>
+                      }
+                    />
+                    <Route
+                      path="catalogo/categorias"
+                      element={
+                        <RotasCatalogo>
+                          <CategoriasPage />
+                        </RotasCatalogo>
+                      }
+                    />
+                    <Route
+                      path="catalogo/:id"
+                      element={
+                        <RotasCatalogo>
+                          <EditarItemPage />
+                        </RotasCatalogo>
+                      }
+                    />
+                    {/* Apoio DEV — RF-FE-003/004/005 (registrado somente em DEV) */}
                     {import.meta.env.DEV && (
                       <>
                         <Route
@@ -231,6 +295,18 @@ export default function App() {
                             >
                               <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
                                 <FornecedorSelectDevPage />
+                              </Suspense>
+                            </RequireRole>
+                          }
+                        />
+                        <Route
+                          path="dev/item-select"
+                          element={
+                            <RequireRole
+                              roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}
+                            >
+                              <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                                <ItemSelectDevPage />
                               </Suspense>
                             </RequireRole>
                           }
