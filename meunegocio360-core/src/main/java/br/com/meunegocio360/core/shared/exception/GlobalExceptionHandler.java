@@ -7,6 +7,7 @@ import br.com.meunegocio360.core.auth.application.AuthService.OriginNotAllowedEx
 import br.com.meunegocio360.core.cliente.application.ClienteService;
 import br.com.meunegocio360.core.empresa.application.EmpresaAtiva;
 import br.com.meunegocio360.core.empresa.application.EmpresaService;
+import br.com.meunegocio360.core.fornecedor.application.FornecedorService;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -286,6 +287,62 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(problem);
   }
 
+  @ExceptionHandler(FornecedorService.SupplierNotFoundException.class)
+  public ResponseEntity<ProblemDetail> handleSupplierNotFound(
+      FornecedorService.SupplierNotFoundException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.NOT_FOUND,
+            "https://meunegocio360.com.br/problemas/fornecedor-nao-encontrado",
+            "Fornecedor não encontrado",
+            ex.getMessage(),
+            request,
+            "SUPPLIER_NOT_FOUND");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+  }
+
+  @ExceptionHandler(FornecedorService.SupplierDocumentDuplicateException.class)
+  public ResponseEntity<ProblemDetail> handleSupplierDocumentDuplicate(
+      FornecedorService.SupplierDocumentDuplicateException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/fornecedor-documento-duplicado",
+            "Documento já cadastrado",
+            ex.getMessage(),
+            request,
+            "SUPPLIER_DOCUMENT_DUPLICATE");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(FornecedorService.SupplierHasHistoryException.class)
+  public ResponseEntity<ProblemDetail> handleSupplierHasHistory(
+      FornecedorService.SupplierHasHistoryException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/fornecedor-com-historico",
+            "Fornecedor não pode ser excluído",
+            ex.getMessage(),
+            request,
+            "SUPPLIER_HAS_HISTORY");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(FornecedorService.InvalidQueryException.class)
+  public ResponseEntity<ProblemDetail> handleSupplierInvalidQuery(
+      FornecedorService.InvalidQueryException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.BAD_REQUEST,
+            "https://meunegocio360.com.br/problemas/validacao",
+            "Dados inválidos",
+            ex.getMessage(),
+            request,
+            "VALIDATION_ERROR");
+    return ResponseEntity.badRequest().body(problem);
+  }
+
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ProblemDetail> handleTypeMismatch(
       MethodArgumentTypeMismatchException ex, WebRequest request) {
@@ -359,6 +416,19 @@ public class GlobalExceptionHandler {
                   "Cliente com este documento já existe (pode estar inativo).",
                   request,
                   "CUSTOMER_DOCUMENT_DUPLICATE"));
+    }
+    if (detalhe.contains("uk_fornecedor_empresa_documento")) {
+      // Corrida na verificação de unicidade do documento do fornecedor (RF-BE-004 RN-02): o
+      // índice único no banco é a fonte da verdade.
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              createProblem(
+                  HttpStatus.CONFLICT,
+                  "https://meunegocio360.com.br/problemas/fornecedor-documento-duplicado",
+                  "Documento já cadastrado",
+                  "Fornecedor com este documento já existe (pode estar inativo).",
+                  request,
+                  "SUPPLIER_DOCUMENT_DUPLICATE"));
     }
     log.error("Violação de integridade do banco não mapeada", ex);
     ProblemDetail problem =
