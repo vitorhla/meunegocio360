@@ -102,6 +102,8 @@ export default function CatalogoPage() {
       if (tipo === 'excluir' && err.code === 'ITEM_NOT_FOUND') {
         setAcaoPendente(null);
         setErroModal(null);
+        // O item já foi excluído por outra sessão: atualiza a lista
+        refetch();
         setSucesso('Este item não existe mais.');
         return;
       }

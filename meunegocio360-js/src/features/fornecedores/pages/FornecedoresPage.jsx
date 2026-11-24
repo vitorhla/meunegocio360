@@ -101,6 +101,8 @@ export default function FornecedoresPage() {
       if (tipo === 'excluir' && err.code === 'SUPPLIER_NOT_FOUND') {
         setAcaoPendente(null);
         setErroModal(null);
+        // O registro já foi excluído por outra sessão: atualiza a lista
+        refetch();
         setSucesso('Este fornecedor não existe mais.');
         return;
       }
