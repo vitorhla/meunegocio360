@@ -1,36 +1,51 @@
 // ============================================================
-// ClienteForm — formulário de cadastro/edição de cliente
-// RHF + zodResolver + tratamento de erro por CODE (RNF-FE-14)
+// PessoaForm — formulário genérico de pessoa (física/jurídica)
+// para entidades com tipoPessoa, nome/razão social, CPF/CNPJ
+// com máscara, e-mail e telefone (RF-FE-003 e RF-FE-004).
+// RHF + zodResolver + tratamento de erro por CODE (RNF-FE-14).
+// Documento e telefone vão à API somente com dígitos
+// (RNF-FE-28).
 // ============================================================
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
-import { clienteSchema } from '../schemas.js';
-import { useClienteAcoes } from '../hooks/useClienteAcoes.js';
+import { pessoaSchema } from '../lib/pessoaSchema.js';
 import {
   TipoPessoa,
   maxDigitosDocumento,
   rotuloDocumento,
-} from '../../../shared/lib/tipoPessoa.js';
-import DocumentoInput from '../../../shared/ui/DocumentoInput.jsx';
-import TelefoneInput from '../../../shared/ui/TelefoneInput.jsx';
-import ErrorAlert from '../../../shared/ui/ErrorAlert.jsx';
+} from '../lib/tipoPessoa.js';
+import DocumentoInput from './DocumentoInput.jsx';
+import TelefoneInput from './TelefoneInput.jsx';
+import ErrorAlert from './ErrorAlert.jsx';
 
 /**
- * Formulário de cadastro ou edição de cliente.
+ * Formulário de cadastro ou edição de uma pessoa
+ * (cliente ou fornecedor).
  *
  * @param {object}    props
  * @param {'cadastro'|'edicao'} props.modo
- * @param {object}    [props.clienteInicial] — dados atuais (edicao)
- * @param {function}  props.onSucesso
- * @param {function}  [props.onRecarregar]   — recarregar (edicao)
- * @param {function}  [props.onCancelar]     — cancelar (edicao)
+ * @param {object}    [props.registroInicial] — dados atuais (edicao);
+ *   inclui `versao` quando a API usa controle de versão
+ * @param {string}    [props.entidade='cliente'] — rótulo da entidade
+ *   nas mensagens ('cliente' | 'fornecedor')
+ * @param {string}    props.codigoDocumentoDuplicado — code do problem+json
+ *   de documento já cadastrado (CUSTOMER_DOCUMENT_DUPLICATE,
+ *   SUPPLIER_DOCUMENT_DUPLICATE, ...)
+ * @param {function}  props.onSubmit — (payload) => Promise<registro salvo>
+ * @param {function}  props.onSucesso — (salvo) => void
+ * @param {function}  [props.onRecarregar] — recarregar dados (edicao,
+ *   em VERSION_CONFLICT)
+ * @param {function}  [props.onCancelar]   — cancelar (edicao)
  */
-export default function ClienteForm({
+export default function PessoaForm({
   modo,
-  clienteInicial,
+  registroInicial = null,
+  entidade = 'cliente',
+  codigoDocumentoDuplicado = 'CUSTOMER_DOCUMENT_DUPLICATE',
+  onSubmit,
   onSucesso,
   onRecarregar,
   onCancelar,
@@ -41,8 +56,6 @@ export default function ClienteForm({
   // (decisão por código, nunca por texto — RNF-FE-14)
   const [serverError, setServerError] = useState(null);
   const [avisoDocumento, setAvisoDocumento] = useState(null);
-
-  const { cadastrar, atualizar } = useClienteAcoes();
 
   const {
     register,
@@ -55,14 +68,14 @@ export default function ClienteForm({
     control,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(clienteSchema),
+    resolver: zodResolver(pessoaSchema),
     defaultValues: isEdicao
       ? {
-          tipoPessoa: clienteInicial?.tipoPessoa || TipoPessoa.FISICA,
-          nome: clienteInicial?.nome || '',
-          documento: clienteInicial?.documento || '',
-          email: clienteInicial?.email || '',
-          telefone: clienteInicial?.telefone || '',
+          tipoPessoa: registroInicial?.tipoPessoa || TipoPessoa.FISICA,
+          nome: registroInicial?.nome || '',
+          documento: registroInicial?.documento || '',
+          email: registroInicial?.email || '',
+          telefone: registroInicial?.telefone || '',
         }
       : {
           tipoPessoa: '',
@@ -78,7 +91,7 @@ export default function ClienteForm({
   // Estado local do tipo de pessoa, atualizado no onChange dos
   // rádios (o RHF guarda o mesmo valor no form state).
   const [tipoPessoaAtual, setTipoPessoaAtual] = useState(
-    isEdicao ? clienteInicial?.tipoPessoa || TipoPessoa.FISICA : '',
+    isEdicao ? registroInicial?.tipoPessoa || TipoPessoa.FISICA : '',
   );
   const isSaving = isSubmitting;
 
@@ -105,7 +118,8 @@ export default function ClienteForm({
 
   /**
    * Monta o payload: documento e telefone SOMENTE dígitos
-   * (RNF-FE-28); opcionais vazios são omitidos.
+   * (RNF-FE-28); opcionais vazios são omitidos; em edição
+   * inclui a `versao` do registro.
    */
   function montarPayload(data) {
     const payload = {
@@ -115,18 +129,15 @@ export default function ClienteForm({
     };
     if (data.email) payload.email = data.email.trim();
     if (data.telefone) payload.telefone = data.telefone;
-    if (isEdicao && clienteInicial) payload.versao = clienteInicial.versao;
+    if (isEdicao && registroInicial) payload.versao = registroInicial.versao;
     return payload;
   }
 
-  async function onSubmit(data) {
+  async function onSubmitHandler(data) {
     setServerError(null);
 
     try {
-      const payload = montarPayload(data);
-      const salvo = isEdicao
-        ? await atualizar.mutateAsync({ id: clienteInicial.id, payload })
-        : await cadastrar.mutateAsync(payload);
+      const salvo = await onSubmit(montarPayload(data));
       onSucesso(salvo);
     } catch (err) {
       if (err.code === 'VALIDATION_ERROR' && err.errors?.length) {
@@ -148,10 +159,9 @@ export default function ClienteForm({
         return;
       }
 
-      if (err.code === 'CUSTOMER_DOCUMENT_DUPLICATE') {
+      if (err.code === codigoDocumentoDuplicado) {
         setError('documento', {
-          message:
-            'Já existe um cliente com este documento. Ele pode estar inativo; busque por ele e reative.',
+          message: `Já existe um ${entidade} com este documento. Ele pode estar inativo; busque por ele e reative.`,
         });
         setTimeout(() => {
           try {
@@ -165,8 +175,7 @@ export default function ClienteForm({
 
       if (err.code === 'VERSION_CONFLICT') {
         setServerError({
-          message:
-            'O cliente foi alterado por outra sessão. Recarregue os dados para continuar.',
+          message: `O ${entidade} foi alterado por outra sessão. Recarregue os dados para continuar.`,
           acao: 'recarregar',
         });
         // O formulário MANTÉM o que foi digitado até a escolha
@@ -183,7 +192,7 @@ export default function ClienteForm({
 
       if (err.code === 'ACCESS_DENIED') {
         setServerError({
-          message: 'Você não tem permissão para cadastrar clientes.',
+          message: `Você não tem permissão para cadastrar ${entidade}s.`,
           acao: null,
         });
         return;
@@ -191,8 +200,7 @@ export default function ClienteForm({
 
       // Rede / 5xx
       setServerError({
-        message:
-          'Não foi possível salvar o cliente. Verifique sua conexão e tente novamente.',
+        message: `Não foi possível salvar o ${entidade}. Verifique sua conexão e tente novamente.`,
         acao: 'reenviar',
       });
     }
@@ -201,7 +209,9 @@ export default function ClienteForm({
   const submitLabel = isEdicao ? 'Salvar' : 'Cadastrar';
   const rotuloNome =
     tipoPessoaAtual === TipoPessoa.JURIDICA ? 'Razão social' : 'Nome';
-  const rotuloDoc = tipoPessoaAtual ? rotuloDocumento(tipoPessoaAtual) : 'CPF ou CNPJ';
+  const rotuloDoc = tipoPessoaAtual
+    ? rotuloDocumento(tipoPessoaAtual)
+    : 'CPF ou CNPJ';
 
   const registroTipo = register('tipoPessoa', { onChange: aoMudarTipo });
 
@@ -230,34 +240,34 @@ export default function ClienteForm({
               : serverError.acao === 'reenviar'
                 ? () => {
                     setServerError(null);
-                    handleSubmit(onSubmit)();
+                    handleSubmit(onSubmitHandler)();
                   }
                 : undefined
           }
         />
       )}
 
-      <Form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <Form onSubmit={handleSubmit(onSubmitHandler)} noValidate>
         {/* Tipo de pessoa */}
         <fieldset className="mb-3">
           <legend className="form-label fs-6">Tipo de pessoa</legend>
           <div className="d-flex gap-4">
             <Form.Check
               type="radio"
-              id="cliente-tipo-fisica"
+              id="pessoa-tipo-fisica"
               label="Pessoa física"
               name="tipoPessoa"
               value={TipoPessoa.FISICA}
               isInvalid={!!errors.tipoPessoa}
               aria-describedby={
-                errors.tipoPessoa ? 'cliente-tipo-feedback' : undefined
+                errors.tipoPessoa ? 'pessoa-tipo-feedback' : undefined
               }
               disabled={isSaving}
               {...registroTipo}
             />
             <Form.Check
               type="radio"
-              id="cliente-tipo-juridica"
+              id="pessoa-tipo-juridica"
               label="Pessoa jurídica"
               name="tipoPessoa"
               value={TipoPessoa.JURIDICA}
@@ -268,45 +278,43 @@ export default function ClienteForm({
           <Form.Control.Feedback
             type="invalid"
             role="alert"
-            id="cliente-tipo-feedback"
+            id="pessoa-tipo-feedback"
           >
             {errors.tipoPessoa?.message}
           </Form.Control.Feedback>
         </fieldset>
 
         {/* Nome (ou razão social) */}
-        <Form.Group className="mb-3" controlId="cliente-nome">
+        <Form.Group className="mb-3" controlId="pessoa-nome">
           <Form.Label>{rotuloNome}</Form.Label>
           <Form.Control
             type="text"
             autoComplete="off"
             isInvalid={!!errors.nome}
-            aria-describedby={
-              errors.nome ? 'cliente-nome-feedback' : undefined
-            }
+            aria-describedby={errors.nome ? 'pessoa-nome-feedback' : undefined}
             disabled={isSaving}
             {...register('nome')}
           />
           <Form.Control.Feedback
             type="invalid"
             role="alert"
-            id="cliente-nome-feedback"
+            id="pessoa-nome-feedback"
           >
             {errors.nome?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
         {/* CPF ou CNPJ */}
-        <Form.Group className="mb-3" controlId="cliente-documento">
+        <Form.Group className="mb-3" controlId="pessoa-documento">
           <Form.Label>{rotuloDoc}</Form.Label>
           <DocumentoInput
             control={control}
             name="documento"
-            id="cliente-documento"
+            id="pessoa-documento"
             tipoPessoa={tipoPessoaAtual || TipoPessoa.FISICA}
             isInvalid={!!errors.documento}
             describedBy={
-              errors.documento ? 'cliente-documento-feedback' : undefined
+              errors.documento ? 'pessoa-documento-feedback' : undefined
             }
             disabled={isSaving}
           />
@@ -318,51 +326,49 @@ export default function ClienteForm({
           <Form.Control.Feedback
             type="invalid"
             role="alert"
-            id="cliente-documento-feedback"
+            id="pessoa-documento-feedback"
           >
             {errors.documento?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
         {/* E-mail */}
-        <Form.Group className="mb-3" controlId="cliente-email">
+        <Form.Group className="mb-3" controlId="pessoa-email">
           <Form.Label>E-mail</Form.Label>
           <Form.Control
             type="email"
             autoComplete="email"
             isInvalid={!!errors.email}
-            aria-describedby={
-              errors.email ? 'cliente-email-feedback' : undefined
-            }
+            aria-describedby={errors.email ? 'pessoa-email-feedback' : undefined}
             disabled={isSaving}
             {...register('email')}
           />
           <Form.Control.Feedback
             type="invalid"
             role="alert"
-            id="cliente-email-feedback"
+            id="pessoa-email-feedback"
           >
             {errors.email?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
         {/* Telefone */}
-        <Form.Group className="mb-3" controlId="cliente-telefone">
+        <Form.Group className="mb-3" controlId="pessoa-telefone">
           <Form.Label>Telefone</Form.Label>
           <TelefoneInput
             control={control}
             name="telefone"
-            id="cliente-telefone"
+            id="pessoa-telefone"
             isInvalid={!!errors.telefone}
             describedBy={
-              errors.telefone ? 'cliente-telefone-feedback' : undefined
+              errors.telefone ? 'pessoa-telefone-feedback' : undefined
             }
             disabled={isSaving}
           />
           <Form.Control.Feedback
             type="invalid"
             role="alert"
-            id="cliente-telefone-feedback"
+            id="pessoa-telefone-feedback"
           >
             {errors.telefone?.message}
           </Form.Control.Feedback>

@@ -73,7 +73,15 @@ export default function AppLayout() {
                   </NavLink>
                 </Nav.Item>
               )}
-              {/* FE-004: + Fornecedores */}
+              {/* FE-004: Fornecedores (ADMIN e OPERADOR_FINANCEIRO) */}
+              {(usuario?.perfil === Perfis.ADMIN ||
+                usuario?.perfil === Perfis.OPERADOR_FINANCEIRO) && (
+                <Nav.Item>
+                  <NavLink to="/fornecedores" className="nav-link">
+                    Fornecedores
+                  </NavLink>
+                </Nav.Item>
+              )}
               {/* FE-005: + Catálogo */}
 
               <span className="text-muted mx-1 small">{usuario?.nome}</span>

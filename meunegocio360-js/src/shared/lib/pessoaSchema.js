@@ -1,7 +1,8 @@
 // ============================================================
-// Schema Zod do cliente (RNF-FE-20)
-// Validação do lado do cliente espelhando o backend
-// (RF-BE-003 RN-02 e RN-04). Documento e telefone validam
+// pessoaSchema — schema Zod de pessoa (física ou jurídica)
+// (RNF-FE-20)
+// Usado pelo cadastro/edição de clientes (RF-FE-003) e
+// fornecedores (RF-FE-004). Documento e telefone validam
 // SOMENTE DÍGITOS (RNF-FE-28).
 // ============================================================
 import { z } from 'zod';
@@ -9,10 +10,10 @@ import {
   TipoPessoa,
   isValidDocumento,
   rotuloDocumento,
-} from '../../shared/lib/tipoPessoa.js';
-import { isValidTelefone } from '../../shared/lib/telefone.js';
+} from './tipoPessoa.js';
+import { isValidTelefone } from './telefone.js';
 
-export const clienteSchema = z
+export const pessoaSchema = z
   .object({
     tipoPessoa: z
       .string()
@@ -60,4 +61,4 @@ export const clienteSchema = z
     }
   });
 
-export default clienteSchema;
+export default pessoaSchema;

@@ -41,6 +41,18 @@ const EditarClientePage = lazy(() =>
 const ClienteSelectDevPage = lazy(() =>
   import('../features/clientes/pages/ClienteSelectDevPage.jsx').then((m) => ({ default: m.default })),
 );
+const FornecedoresPage = lazy(() =>
+  import('../features/fornecedores/pages/FornecedoresPage.jsx').then((m) => ({ default: m.default })),
+);
+const NovoFornecedorPage = lazy(() =>
+  import('../features/fornecedores/pages/NovoFornecedorPage.jsx').then((m) => ({ default: m.default })),
+);
+const EditarFornecedorPage = lazy(() =>
+  import('../features/fornecedores/pages/EditarFornecedorPage.jsx').then((m) => ({ default: m.default })),
+);
+const FornecedorSelectDevPage = lazy(() =>
+  import('../features/fornecedores/pages/FornecedorSelectDevPage.jsx').then((m) => ({ default: m.default })),
+);
 
 /**
  * Roteador padrão das rotas de clientes (RF-FE-003):
@@ -49,6 +61,22 @@ const ClienteSelectDevPage = lazy(() =>
 function RotasClientes({ children }) {
   return (
     <RequireRole roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}>
+      <RequireEmpresa>
+        <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+          {children}
+        </Suspense>
+      </RequireEmpresa>
+    </RequireRole>
+  );
+}
+
+/**
+ * Roteador padrão das rotas de fornecedores (RF-FE-004):
+ * perfil (ADMIN/OPERADOR_FINANCEIRO) + empresa ativa.
+ */
+function RotasFornecedores({ children }) {
+  return (
+    <RequireRole roles={[Perfis.ADMIN, Perfis.OPERADOR_FINANCEIRO]}>
       <RequireEmpresa>
         <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
           {children}
@@ -155,20 +183,59 @@ export default function App() {
                         </RotasClientes>
                       }
                     />
-                    {/* Apoio DEV — RF-FE-003 (registrada somente em DEV) */}
+                    {/* Fornecedores — RF-FE-004 (ADMIN e OPERADOR_FINANCEIRO) */}
+                    <Route
+                      path="fornecedores"
+                      element={
+                        <RotasFornecedores>
+                          <FornecedoresPage />
+                        </RotasFornecedores>
+                      }
+                    />
+                    <Route
+                      path="fornecedores/novo"
+                      element={
+                        <RotasFornecedores>
+                          <NovoFornecedorPage />
+                        </RotasFornecedores>
+                      }
+                    />
+                    <Route
+                      path="fornecedores/:id"
+                      element={
+                        <RotasFornecedores>
+                          <EditarFornecedorPage />
+                        </RotasFornecedores>
+                      }
+                    />
+                    {/* Apoio DEV — RF-FE-003/004 (registrado somente em DEV) */}
                     {import.meta.env.DEV && (
-                      <Route
-                        path="dev/cliente-select"
-                        element={
-                          <RequireRole
-                            roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}
-                          >
-                            <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
-                              <ClienteSelectDevPage />
-                            </Suspense>
-                          </RequireRole>
-                        }
-                      />
+                      <>
+                        <Route
+                          path="dev/cliente-select"
+                          element={
+                            <RequireRole
+                              roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}
+                            >
+                              <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                                <ClienteSelectDevPage />
+                              </Suspense>
+                            </RequireRole>
+                          }
+                        />
+                        <Route
+                          path="dev/fornecedor-select"
+                          element={
+                            <RequireRole
+                              roles={[Perfis.ADMIN, Perfis.OPERADOR_FINANCEIRO]}
+                            >
+                              <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                                <FornecedorSelectDevPage />
+                              </Suspense>
+                            </RequireRole>
+                          }
+                        />
+                      </>
                     )}
                   </Route>
                 </Route>

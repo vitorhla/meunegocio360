@@ -6,7 +6,8 @@
 import { Link, useNavigate, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { obterCliente } from '../api/clientesApi.js';
-import ClienteForm from '../components/ClienteForm.jsx';
+import { useClienteAcoes } from '../hooks/useClienteAcoes.js';
+import PessoaForm from '../../../shared/ui/PessoaForm.jsx';
 import usePageTitle from '../../../shared/lib/usePageTitle.js';
 import LoadingSpinner from '../../../shared/ui/LoadingSpinner.jsx';
 import ErrorScreen from '../../../shared/ui/ErrorScreen.jsx';
@@ -15,6 +16,7 @@ export default function EditarClientePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   usePageTitle('Editar cliente');
+  const { atualizar } = useClienteAcoes();
 
   const { data: cliente, isPending, isError, error, refetch } = useQuery({
     queryKey: ['clientes', id],
@@ -52,9 +54,14 @@ export default function EditarClientePage() {
     <div className="row">
       <div className="col-md-8 col-lg-6">
         <h1 className="fs-2 mb-4">Editar cliente</h1>
-        <ClienteForm
+        <PessoaForm
           modo="edicao"
-          clienteInicial={cliente}
+          registroInicial={cliente}
+          entidade="cliente"
+          codigoDocumentoDuplicado="CUSTOMER_DOCUMENT_DUPLICATE"
+          onSubmit={(payload) =>
+            atualizar.mutateAsync({ id: cliente.id, payload })
+          }
           onSucesso={() =>
             navigate('/clientes', {
               state: { sucesso: 'Cliente atualizado com sucesso.' },
