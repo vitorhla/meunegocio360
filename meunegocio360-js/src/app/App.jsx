@@ -29,6 +29,34 @@ const CadastroEmpresaPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import('../features/auth/pages/NotFoundPage.jsx').then((m) => ({ default: m.default })),
 );
+const ClientesPage = lazy(() =>
+  import('../features/clientes/pages/ClientesPage.jsx').then((m) => ({ default: m.default })),
+);
+const NovoClientePage = lazy(() =>
+  import('../features/clientes/pages/NovoClientePage.jsx').then((m) => ({ default: m.default })),
+);
+const EditarClientePage = lazy(() =>
+  import('../features/clientes/pages/EditarClientePage.jsx').then((m) => ({ default: m.default })),
+);
+const ClienteSelectDevPage = lazy(() =>
+  import('../features/clientes/pages/ClienteSelectDevPage.jsx').then((m) => ({ default: m.default })),
+);
+
+/**
+ * Roteador padrão das rotas de clientes (RF-FE-003):
+ * perfil (ADMIN/OPERADOR_COMERCIAL) + empresa ativa.
+ */
+function RotasClientes({ children }) {
+  return (
+    <RequireRole roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}>
+      <RequireEmpresa>
+        <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+          {children}
+        </Suspense>
+      </RequireEmpresa>
+    </RequireRole>
+  );
+}
 
 function AuthGate({ children }) {
   const { status, sessionError, retryRestore } = useAuth();
@@ -102,6 +130,46 @@ export default function App() {
                         </Suspense>
                       }
                     />
+                    {/* Clientes — RF-FE-003 (ADMIN e OPERADOR_COMERCIAL) */}
+                    <Route
+                      path="clientes"
+                      element={
+                        <RotasClientes>
+                          <ClientesPage />
+                        </RotasClientes>
+                      }
+                    />
+                    <Route
+                      path="clientes/novo"
+                      element={
+                        <RotasClientes>
+                          <NovoClientePage />
+                        </RotasClientes>
+                      }
+                    />
+                    <Route
+                      path="clientes/:id"
+                      element={
+                        <RotasClientes>
+                          <EditarClientePage />
+                        </RotasClientes>
+                      }
+                    />
+                    {/* Apoio DEV — RF-FE-003 (registrada somente em DEV) */}
+                    {import.meta.env.DEV && (
+                      <Route
+                        path="dev/cliente-select"
+                        element={
+                          <RequireRole
+                            roles={[Perfis.ADMIN, Perfis.OPERADOR_COMERCIAL]}
+                          >
+                            <Suspense fallback={<LoadingSpinner text="Carregando…" />}>
+                              <ClienteSelectDevPage />
+                            </Suspense>
+                          </RequireRole>
+                        }
+                      />
+                    )}
                   </Route>
                 </Route>
               </Route>
