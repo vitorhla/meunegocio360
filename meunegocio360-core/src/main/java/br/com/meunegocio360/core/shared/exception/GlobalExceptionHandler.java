@@ -4,6 +4,8 @@ import br.com.meunegocio360.core.auth.application.AuthService.AccountLockedExcep
 import br.com.meunegocio360.core.auth.application.AuthService.InvalidCredentialsException;
 import br.com.meunegocio360.core.auth.application.AuthService.InvalidRefreshTokenException;
 import br.com.meunegocio360.core.auth.application.AuthService.OriginNotAllowedException;
+import br.com.meunegocio360.core.catalogo.application.CategoriaService;
+import br.com.meunegocio360.core.catalogo.application.ItemCatalogoService;
 import br.com.meunegocio360.core.cliente.application.ClienteService;
 import br.com.meunegocio360.core.empresa.application.EmpresaAtiva;
 import br.com.meunegocio360.core.empresa.application.EmpresaService;
@@ -343,6 +345,146 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(problem);
   }
 
+  @ExceptionHandler(CategoriaService.CategoryNotFoundException.class)
+  public ResponseEntity<ProblemDetail> handleCategoryNotFound(
+      CategoriaService.CategoryNotFoundException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.NOT_FOUND,
+            "https://meunegocio360.com.br/problemas/categoria-nao-encontrada",
+            "Categoria não encontrada",
+            ex.getMessage(),
+            request,
+            "CATEGORY_NOT_FOUND");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+  }
+
+  @ExceptionHandler(CategoriaService.CategoryNameDuplicateException.class)
+  public ResponseEntity<ProblemDetail> handleCategoryNameDuplicate(
+      CategoriaService.CategoryNameDuplicateException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/categoria-nome-duplicado",
+            "Nome já cadastrado",
+            ex.getMessage(),
+            request,
+            "CATEGORY_NAME_DUPLICATE");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(CategoriaService.CategoryInUseException.class)
+  public ResponseEntity<ProblemDetail> handleCategoryInUse(
+      CategoriaService.CategoryInUseException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/categoria-em-uso",
+            "Categoria não pode ser excluída",
+            ex.getMessage(),
+            request,
+            "CATEGORY_IN_USE");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(CategoriaService.InvalidQueryException.class)
+  public ResponseEntity<ProblemDetail> handleCategoryInvalidQuery(
+      CategoriaService.InvalidQueryException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.BAD_REQUEST,
+            "https://meunegocio360.com.br/problemas/validacao",
+            "Dados inválidos",
+            ex.getMessage(),
+            request,
+            "VALIDATION_ERROR");
+    return ResponseEntity.badRequest().body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.ItemNotFoundException.class)
+  public ResponseEntity<ProblemDetail> handleItemNotFound(
+      ItemCatalogoService.ItemNotFoundException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.NOT_FOUND,
+            "https://meunegocio360.com.br/problemas/item-nao-encontrado",
+            "Item de catálogo não encontrado",
+            ex.getMessage(),
+            request,
+            "ITEM_NOT_FOUND");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.ItemCodeDuplicateException.class)
+  public ResponseEntity<ProblemDetail> handleItemCodeDuplicate(
+      ItemCatalogoService.ItemCodeDuplicateException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.CONFLICT,
+            "https://meunegocio360.com.br/problemas/item-codigo-duplicado",
+            "Código já cadastrado",
+            ex.getMessage(),
+            request,
+            "ITEM_CODE_DUPLICATE");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.ItemTypeImmutableException.class)
+  public ResponseEntity<ProblemDetail> handleItemTypeImmutable(
+      ItemCatalogoService.ItemTypeImmutableException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/item-tipo-imutavel",
+            "Tipo do item não pode ser alterado",
+            ex.getMessage(),
+            request,
+            "ITEM_TYPE_IMMUTABLE");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.CategoryInvalidException.class)
+  public ResponseEntity<ProblemDetail> handleCategoryInvalid(
+      ItemCatalogoService.CategoryInvalidException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/categoria-invalida",
+            "Categoria inválida",
+            ex.getMessage(),
+            request,
+            "CATEGORY_INVALID");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.ItemHasHistoryException.class)
+  public ResponseEntity<ProblemDetail> handleItemHasHistory(
+      ItemCatalogoService.ItemHasHistoryException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "https://meunegocio360.com.br/problemas/item-com-historico",
+            "Item não pode ser excluído",
+            ex.getMessage(),
+            request,
+            "ITEM_HAS_HISTORY");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+  }
+
+  @ExceptionHandler(ItemCatalogoService.InvalidQueryException.class)
+  public ResponseEntity<ProblemDetail> handleItemInvalidQuery(
+      ItemCatalogoService.InvalidQueryException ex, WebRequest request) {
+    ProblemDetail problem =
+        createProblem(
+            HttpStatus.BAD_REQUEST,
+            "https://meunegocio360.com.br/problemas/validacao",
+            "Dados inválidos",
+            ex.getMessage(),
+            request,
+            "VALIDATION_ERROR");
+    return ResponseEntity.badRequest().body(problem);
+  }
+
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ProblemDetail> handleTypeMismatch(
       MethodArgumentTypeMismatchException ex, WebRequest request) {
@@ -429,6 +571,33 @@ public class GlobalExceptionHandler {
                   "Fornecedor com este documento já existe (pode estar inativo).",
                   request,
                   "SUPPLIER_DOCUMENT_DUPLICATE"));
+    }
+    if (detalhe.contains("uk_item_catalogo_empresa_codigo")) {
+      // Corrida na verificação de unicidade do código do item (RF-BE-005 RN-04): o índice único
+      // no banco é a fonte da verdade.
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              createProblem(
+                  HttpStatus.CONFLICT,
+                  "https://meunegocio360.com.br/problemas/item-codigo-duplicado",
+                  "Código já cadastrado",
+                  "Já existe um item com este código na empresa.",
+                  request,
+                  "ITEM_CODE_DUPLICATE"));
+    }
+    if (detalhe.contains("uk_categoria_empresa_nome")) {
+      // Corrida na verificação de unicidade do nome da categoria (RF-BE-005 RN-06): o índice
+      // único no banco é a fonte da verdade.
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              createProblem(
+                  HttpStatus.CONFLICT,
+                  "https://meunegocio360.com.br/problemas/categoria-nome-duplicado",
+                  "Nome já cadastrado",
+                  "Já existe uma categoria com este nome na empresa (maiúsculas e acentos não"
+                      + " diferenciam).",
+                  request,
+                  "CATEGORY_NAME_DUPLICATE"));
     }
     log.error("Violação de integridade do banco não mapeada", ex);
     ProblemDetail problem =
