@@ -12,6 +12,10 @@ export class ApiError extends Error {
    * @param {string} detail       Mensagem legível
    * @param {Array<{field:string,message:string}>} [errors] Erros por campo
    * @param {number|null} [retryAfter] Segundos do header Retry-After
+   *
+   * @property {object} [problem]  Corpo problem+json original, com as extensões
+   *   da resposta (ex.: `existeInativa`). Preenchido pelo apiClient quando há
+   *   corpo legível.
    */
   constructor(status, code, detail, errors = [], retryAfter = null) {
     super(detail);
@@ -196,13 +200,15 @@ export async function apiClient(path, options = {}) {
 
         if (!retryRes.ok) {
           const errBody = await parseProblemJson(retryRes);
-          throw new ApiError(
+          const apiError = new ApiError(
             retryRes.status,
             errBody.code || 'UNKNOWN_ERROR',
             errBody.detail || retryRes.statusText,
             errBody.errors || [],
             parseRetryAfter(retryRes),
           );
+          apiError.problem = errBody;
+          throw apiError;
         }
 
         if (retryRes.status === 204) return null;
@@ -231,13 +237,16 @@ export async function apiClient(path, options = {}) {
 
     // ---- Erro problem+json ----
     const errBody = await parseProblemJson(res);
-    throw new ApiError(
+    const apiError = new ApiError(
       res.status,
       errBody.code || 'UNKNOWN_ERROR',
       errBody.detail || res.statusText,
       errBody.errors || [],
       parseRetryAfter(res),
     );
+    // Mantém o corpo original para extensões (ex.: existeInativa no 404 da empresa)
+    apiError.problem = errBody;
+    throw apiError;
   } catch (err) {
     clearTimeout(timeoutId);
 

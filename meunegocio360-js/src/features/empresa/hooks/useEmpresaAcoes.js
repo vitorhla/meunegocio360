@@ -39,6 +39,8 @@ export function useEmpresaAcoes() {
       } else {
         queryClient.setQueryData(['empresa'], data);
       }
+      // A lista de empresas muda com a situação (usada na tela de reativação)
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
     },
   });
 

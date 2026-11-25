@@ -12,7 +12,10 @@ import { EmpresaContext, EmpresaStatus } from './EmpresaContext.jsx';
 /**
  * Provider da empresa ativa.
  *
- * Expõe { status, empresa, erro, refetch }.
+ * Expõe { status, empresa, erro, temInativa, refetch }.
+ * `temInativa` vem da extensão `existeInativa` do 404 COMPANY_NOT_REGISTERED:
+ * true quando não há empresa ativa mas existe empresa inativa no sistema
+ * (orienta a reativação nas telas de espera).
  * useEffect: quando a autenticação muda para não-autenticado,
  * remove os dados da empresa do cache (evita dados de outro
  * usuário no próximo login).
@@ -56,6 +59,9 @@ export function EmpresaProvider() {
     status,
     empresa: empresa || null,
     erro: error || null,
+    temInativa:
+      error?.code === 'COMPANY_NOT_REGISTERED' &&
+      error.problem?.existeInativa === true,
     refetch,
     EmpresaStatus,
   };
