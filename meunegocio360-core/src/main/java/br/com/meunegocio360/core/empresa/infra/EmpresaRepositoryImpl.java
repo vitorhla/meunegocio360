@@ -2,6 +2,7 @@ package br.com.meunegocio360.core.empresa.infra;
 
 import br.com.meunegocio360.core.empresa.domain.Empresa;
 import br.com.meunegocio360.core.empresa.domain.EmpresaRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,16 @@ class EmpresaRepositoryImpl implements EmpresaRepository {
   @Override
   public Optional<Empresa> findAtiva() {
     return jpaRepository.findFirstByAtivaTrue();
+  }
+
+  @Override
+  public List<Empresa> findAll() {
+    return jpaRepository.findAllByOrderByCriadoEmAsc();
+  }
+
+  @Override
+  public boolean existsByAtivaFalse() {
+    return jpaRepository.existsByAtivaFalse();
   }
 
   @Override

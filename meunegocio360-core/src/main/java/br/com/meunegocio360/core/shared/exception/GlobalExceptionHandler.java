@@ -188,6 +188,8 @@ public class GlobalExceptionHandler {
             ex.getMessage(),
             request,
             "COMPANY_NOT_REGISTERED");
+    // Extensão (RFC 9457): orienta a interface a oferecer a reativação quando há empresa inativa.
+    problem.setProperty("existeInativa", ex.existeInativa());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
   }
 

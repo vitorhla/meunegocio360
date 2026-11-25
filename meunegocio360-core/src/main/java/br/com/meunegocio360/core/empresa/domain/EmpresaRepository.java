@@ -1,5 +1,6 @@
 package br.com.meunegocio360.core.empresa.domain;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,6 +9,12 @@ public interface EmpresaRepository {
 
   /** No máximo uma empresa ativa por instalação (RN-02). */
   Optional<Empresa> findAtiva();
+
+  /** Todas as empresas (ativas e inativas), da mais antiga para a mais nova. */
+  List<Empresa> findAll();
+
+  /** Existe alguma empresa inativa? (orienta a reativação quando não há ativa) */
+  boolean existsByAtivaFalse();
 
   Optional<Empresa> findById(UUID id);
 

@@ -12,6 +12,14 @@ export function getEmpresa() {
 }
 
 /**
+ * Lista todas as empresas, ativas e inativas (somente ADMIN).
+ * @returns {Promise<object[]>} 200 array de empresas (vazio se não houver)
+ */
+export function listarEmpresas() {
+  return apiClient('/empresas');
+}
+
+/**
  * Cadastra a empresa (ADMIN).
  * @param {object} payload
  * @returns {Promise<object>}

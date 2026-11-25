@@ -1,12 +1,17 @@
 package br.com.meunegocio360.core.empresa.infra;
 
 import br.com.meunegocio360.core.empresa.domain.Empresa;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EmpresaJpaRepository extends JpaRepository<Empresa, UUID> {
   Optional<Empresa> findFirstByAtivaTrue();
+
+  List<Empresa> findAllByOrderByCriadoEmAsc();
+
+  boolean existsByAtivaFalse();
 
   boolean existsByCnpj(String cnpj);
 
