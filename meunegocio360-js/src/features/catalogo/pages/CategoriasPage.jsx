@@ -93,6 +93,8 @@ export default function CategoriasPage() {
       if (tipo === 'excluir' && err.code === 'CATEGORY_NOT_FOUND') {
         setAcaoPendente(null);
         setErroModal(null);
+        // A categoria já foi excluída por outra sessão: atualiza a lista
+        refetch();
         setSucesso('Esta categoria não existe mais.');
         return;
       }

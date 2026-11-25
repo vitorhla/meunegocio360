@@ -3,6 +3,10 @@
 // §2 do requisitos-fe.md
 // ============================================================
 
+// Módulo nativo do Dart Sass (sintaxe moderna) — o @use precisa
+// vir antes de qualquer outra regra do arquivo
+@use 'sass:map';
+
 // 1. Tipografia (antes do bootstrap para que as variáveis
 //    sejam usadas durante a compilação do Bootstrap)
 // ------------------------------------------------------------
@@ -67,7 +71,7 @@ $font-size-base: 1rem;
 
 // 5. Tema estendido (após o Bootstrap)
 // ------------------------------------------------------------
-$theme-colors: map-merge(
+$theme-colors: map.merge(
   $theme-colors,
   (
     'footer': #cdbbae,

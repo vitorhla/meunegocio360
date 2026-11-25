@@ -98,6 +98,8 @@ export default function ClientesPage() {
       if (tipo === 'excluir' && err.code === 'CUSTOMER_NOT_FOUND') {
         setAcaoPendente(null);
         setErroModal(null);
+        // O registro já foi excluído por outra sessão: atualiza a lista
+        refetch();
         setSucesso('Este cliente não existe mais.');
         return;
       }
